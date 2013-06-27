@@ -58,7 +58,7 @@ extern "C" {
 #define MEDIA_SVC_UUID_SIZE		    				36 						/**< Length of UUID*/
 
 #define MEDIA_SVC_TAG_UNKNOWN				"Unknown"
-#define MEDIA_SVC_MEDIA_PATH				MEDIA_DATA_PATH			/**<  Media path*/
+#define MEDIA_SVC_MEDIA_PATH				MEDIA_THUMB_ROOT_PATH			/**<  Media path*/
 #define MEDIA_SVC_THUMB_PATH_PREFIX			MEDIA_SVC_MEDIA_PATH"/.thumb"			/**< Thumbnail path prefix*/
 #define MEDIA_SVC_THUMB_INTERNAL_PATH 		MEDIA_SVC_THUMB_PATH_PREFIX"/phone"	/**<  Phone thumbnail path*/
 #define MEDIA_SVC_THUMB_EXTERNAL_PATH 		MEDIA_SVC_THUMB_PATH_PREFIX"/mmc"		/**<  MMC thumbnail path*/
