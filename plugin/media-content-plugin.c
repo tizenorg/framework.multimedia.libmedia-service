@@ -20,6 +20,7 @@
  */
 
 #include <string.h>
+#include <sys/stat.h>
 #include <mm_file.h>
 #include <media-thumbnail.h>
 #include "media-svc.h"
@@ -193,9 +194,10 @@ int disconnect(void * handle, char ** err_msg)
 	return MEDIA_SVC_PLUGIN_ERROR_NONE;
 }
 
-int check_item_exist(void* handle, const char *file_path, int storage_type, char ** err_msg)
+int check_item_exist(void* handle, const char *file_path, bool *modified, char ** err_msg)
 {
 	int ret = MEDIA_SVC_PLUGIN_ERROR_NONE;
+	*modified = TRUE;
 
 	if(handle == NULL) {
 		__set_error_message(ERR_HANDLE, err_msg);
@@ -207,14 +209,25 @@ int check_item_exist(void* handle, const char *file_path, int storage_type, char
 		return MEDIA_SVC_PLUGIN_ERROR;
 	}
 
-	if(!STORAGE_VALID(storage_type)) {
-		__set_error_message(ERR_STORAGE_TYPE, err_msg);
-		return MEDIA_SVC_PLUGIN_ERROR;
-	}
-
 	ret = media_svc_check_item_exist_by_path(handle, file_path);
-	if(ret == MEDIA_INFO_ERROR_NONE)
+	if(ret == MEDIA_INFO_ERROR_NONE) {
+		time_t modified_time = 0;
+		unsigned long long file_size = 0;
+		struct stat st;
+
+		ret = media_svc_get_file_info(handle, file_path, &modified_time, &file_size);
+		if(ret == MEDIA_INFO_ERROR_NONE) {
+			memset(&st, 0, sizeof(struct stat));
+			if (stat(file_path, &st) == 0) {
+				if((st.st_mtime != modified_time) || (st.st_size != file_size))
+					*modified = TRUE;
+				else
+					*modified = FALSE;
+			}
+		}
+
 		return MEDIA_SVC_PLUGIN_ERROR_NONE;	//exist
+	}
 
 	__set_error_message(ERR_CHECK_ITEM, err_msg);
 
@@ -516,7 +529,7 @@ int set_item_validity(void * handle, const char *file_path, int storage_type, in
 	return MEDIA_SVC_PLUGIN_ERROR_NONE;
 }
 
-int delete_item(void * handle, const char *file_path, int storage_type, char ** err_msg)
+int delete_item(void * handle, const char *file_path, char ** err_msg)
 {
 	int ret = MEDIA_SVC_PLUGIN_ERROR_NONE;
 
@@ -527,11 +540,6 @@ int delete_item(void * handle, const char *file_path, int storage_type, char ** 
 
 	if (!STRING_VALID(file_path)) {
 		__set_error_message(ERR_FILE_PATH, err_msg);
-		return MEDIA_SVC_PLUGIN_ERROR;
-	}
-
-	if(!STORAGE_VALID(storage_type)) {
-		__set_error_message(ERR_STORAGE_TYPE, err_msg);
 		return MEDIA_SVC_PLUGIN_ERROR;
 	}
 

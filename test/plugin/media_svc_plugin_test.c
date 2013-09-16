@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <dlfcn.h>
+#include <stdbool.h>
 #include <media-svc.h>
 
 #define PLUGIN_SO_FILE_NAME  "/usr/lib/libmedia-content-plugin.so"
@@ -32,7 +33,7 @@ static void msg_print(int line, char *msg);
 int (*svc_check_item)			(const char *file_path, const char * mime_type, char ** err_msg);
 int (*svc_connect)				(void ** handle, char ** err_msg);
 int (*svc_disconnect)			(void * handle, char ** err_msg);
-int (*svc_check_item_exist)		(void* handle, const char *file_path, int storage_type, char ** err_msg);
+int (*svc_check_item_exist)		(void* handle, const char *file_path, bool *modified, char ** err_msg);
 int (*svc_insert_item_immediately)	(void* handle, const char *file_path, int storage_type, const char * mime_type, char ** err_msg);
 int (*svc_set_folder_item_validity) (void * handle, const char * folder_path, int validity, int recursive, char ** err_msg);
 int (*svc_delete_all_invalid_items_in_folder) (void * handle, const char *folder_path, char ** err_msg);
@@ -140,9 +141,9 @@ int main()
 
 	printf("Enter path and mimetype ( ex. /opt/usr/media/a.jpg image ) : ");
 	scanf("%s %s", path, type);
-
+	bool modified = false;
 	//check_item_exist ============================================
-	ret = svc_check_item_exist(db_handle, path, 0, &err_msg);
+	ret = svc_check_item_exist(db_handle, path, &modified, &err_msg);
 	if(ret < 0) {
 		msg_print(__LINE__, "svc_check_item_exist error");
 		if(err_msg != NULL) {
@@ -153,7 +154,10 @@ int main()
 		//__unload_functions();
 		//return -1;
 	} else {
-		msg_print(__LINE__, "svc_check_item_exist success");
+		if(modified)
+			msg_print(__LINE__, "svc_check_item_exist success. Modified");
+		else
+			msg_print(__LINE__, "svc_check_item_exist success. Not modified");
 	}
 
 	// svc_check_item_exist ============================================

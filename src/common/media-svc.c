@@ -164,6 +164,15 @@ int media_svc_get_media_type(const char *path, const char *mime_type, media_svc_
 	return ret;
 }
 
+int media_svc_get_file_info(MediaSvcHandle *handle, const char *path, time_t *modified_time, unsigned long long *size)
+{
+	int ret = MEDIA_INFO_ERROR_NONE;
+
+	ret = _media_svc_get_fileinfo_by_path(handle, path, modified_time, size);
+
+	return ret;
+}
+
 int media_svc_check_item_exist_by_path(MediaSvcHandle *handle, const char *path)
 {
 	int ret = MEDIA_INFO_ERROR_NONE;

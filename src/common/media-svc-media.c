@@ -379,7 +379,7 @@ int _media_svc_get_media_type_by_path(sqlite3 *handle, const char *path, int *me
 int _media_svc_delete_item_by_path(sqlite3 *handle, const char *path)
 {
 	int err = -1;
-	char *sql = sqlite3_mprintf("DELETE FROM %s WHERE validity=1 AND path='%q'", MEDIA_SVC_DB_TABLE_MEDIA, path);
+	char *sql = sqlite3_mprintf("DELETE FROM %s WHERE path='%q'", MEDIA_SVC_DB_TABLE_MEDIA, path);
 
 	err = _media_svc_sql_query(handle, sql);
 	sqlite3_free(sql);
@@ -824,6 +824,28 @@ int _media_svc_get_thumbnail_count(sqlite3 *handle, const char *thumb_path, int 
 	}
 
 	*count = sqlite3_column_int(sql_stmt, 0);
+
+	SQLITE3_FINALIZE(sql_stmt);
+
+	return MEDIA_INFO_ERROR_NONE;
+}
+
+int _media_svc_get_fileinfo_by_path(sqlite3 *handle, const char *path, time_t *modified_time, unsigned long long *size)
+{
+	int ret = MEDIA_INFO_ERROR_NONE;
+	sqlite3_stmt *sql_stmt = NULL;
+	char *sql = sqlite3_mprintf("SELECT modified_time, size FROM %s WHERE path='%q'",
+					MEDIA_SVC_DB_TABLE_MEDIA, path);
+
+	ret = _media_svc_sql_prepare_to_step(handle, sql, &sql_stmt);
+
+	if (ret != MEDIA_INFO_ERROR_NONE) {
+		media_svc_error("error when _media_svc_get_fileinfo_by_path. err = [%d]", ret);
+		return ret;
+	}
+
+	*modified_time = (int)sqlite3_column_int(sql_stmt, 0);
+	*size = (unsigned long long)sqlite3_column_int64(sql_stmt, 1);
 
 	SQLITE3_FINALIZE(sql_stmt);
 
