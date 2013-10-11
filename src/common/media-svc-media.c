@@ -99,7 +99,9 @@ static int __media_svc_count_invalid_folder_records_with_thumbnail(sqlite3 *hand
 {
 	int ret = MEDIA_INFO_ERROR_NONE;
 	sqlite3_stmt *sql_stmt = NULL;
-	char *sql = sqlite3_mprintf("SELECT count(*) FROM %s WHERE validity=0 AND path LIKE '%q/%%' AND thumbnail_path IS NOT NULL",
+//	char *sql = sqlite3_mprintf("SELECT count(*) FROM %s WHERE validity=0 AND path LIKE '%q/%%' AND thumbnail_path IS NOT NULL",
+//					MEDIA_SVC_DB_TABLE_MEDIA, folder_path);
+	char *sql = sqlite3_mprintf("SELECT count(*) FROM %s WHERE validity=0 AND path GLOB '%q/*' AND thumbnail_path IS NOT NULL",
 					MEDIA_SVC_DB_TABLE_MEDIA, folder_path);
 
 	ret = _media_svc_sql_prepare_to_step(handle, sql, &sql_stmt);
@@ -124,7 +126,10 @@ static int __media_svc_get_invalid_folder_records_with_thumbnail(sqlite3 *handle
 	int idx = 0;
 	sqlite3_stmt *sql_stmt = NULL;
 
-	char *sql = sqlite3_mprintf("SELECT thumbnail_path from (select thumbnail_path, validity from %s WHERE path LIKE '%q/%%' AND thumbnail_path IS NOT NULL GROUP BY thumbnail_path HAVING count() = 1) WHERE validity=0",
+//	char *sql = sqlite3_mprintf("SELECT thumbnail_path from (select thumbnail_path, validity from %s WHERE path LIKE '%q/%%' AND thumbnail_path IS NOT NULL GROUP BY thumbnail_path HAVING count() = 1) WHERE validity=0",
+//					MEDIA_SVC_DB_TABLE_MEDIA, folder_path);
+
+	char *sql = sqlite3_mprintf("SELECT thumbnail_path from (select thumbnail_path, validity from %s WHERE path GLOB '%q/*' AND thumbnail_path IS NOT NULL GROUP BY thumbnail_path HAVING count() = 1) WHERE validity=0",
 					MEDIA_SVC_DB_TABLE_MEDIA, folder_path);
 
 	media_svc_debug("[SQL query] : %s", sql);
@@ -492,7 +497,8 @@ int _media_svc_delete_invalid_folder_items(sqlite3 *handle, const char *folder_p
 		media_svc_debug("There is no item with thumbnail");
 	}
 
-	char *sql = sqlite3_mprintf("DELETE FROM %s WHERE validity = 0 AND path LIKE '%q/%%'", MEDIA_SVC_DB_TABLE_MEDIA, folder_path);
+//	char *sql = sqlite3_mprintf("DELETE FROM %s WHERE validity = 0 AND path LIKE '%q/%%'", MEDIA_SVC_DB_TABLE_MEDIA, folder_path);
+	char *sql = sqlite3_mprintf("DELETE FROM %s WHERE validity = 0 AND path GLOB '%q/*'", MEDIA_SVC_DB_TABLE_MEDIA, folder_path);
 	err = _media_svc_sql_query(handle, sql);
 	sqlite3_free(sql);
 	if (err != SQLITE_OK) {
@@ -604,7 +610,8 @@ int _media_svc_update_recursive_folder_item_validity(sqlite3 *handle, const char
 	int err = -1;
 
 	/*Update folder item validity*/
-	char *sql = sqlite3_mprintf("UPDATE %s SET validity=%d WHERE path LIKE '%q/%%'", MEDIA_SVC_DB_TABLE_MEDIA, validity, folder_path);
+//	char *sql = sqlite3_mprintf("UPDATE %s SET validity=%d WHERE path LIKE '%q/%%'", MEDIA_SVC_DB_TABLE_MEDIA, validity, folder_path);
+	char *sql = sqlite3_mprintf("UPDATE %s SET validity=%d WHERE path GLOB '%q/*'", MEDIA_SVC_DB_TABLE_MEDIA, validity, folder_path);
 	err = _media_svc_sql_query(handle, sql);
 	sqlite3_free(sql);
 	if (err != SQLITE_OK) {
@@ -793,8 +800,12 @@ int _media_svc_count_invalid_folder_items(sqlite3 *handle, const char *folder_pa
 {
 	int ret = MEDIA_INFO_ERROR_NONE;
 	sqlite3_stmt *sql_stmt = NULL;
-	char *sql = sqlite3_mprintf("SELECT count(*) FROM %s WHERE validity=0 AND path LIKE '%q/%%'",
+//	char *sql = sqlite3_mprintf("SELECT count(*) FROM %s WHERE validity=0 AND path LIKE '%q/%%'",
+//					MEDIA_SVC_DB_TABLE_MEDIA, folder_path);
+
+	char *sql = sqlite3_mprintf("SELECT count(*) FROM %s WHERE validity=0 AND path GLOB '%q/*'",
 					MEDIA_SVC_DB_TABLE_MEDIA, folder_path);
+
 
 	ret = _media_svc_sql_prepare_to_step(handle, sql, &sql_stmt);
 
