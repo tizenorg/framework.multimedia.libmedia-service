@@ -632,3 +632,62 @@ int update_folder_time(void * handle, char *folder_path, char ** err_msg)
 
 	return MEDIA_SVC_PLUGIN_ERROR_NONE;
 }
+
+int update_item_begin(void * handle, int item_cnt, char ** err_msg)
+{
+	int ret = MEDIA_SVC_PLUGIN_ERROR_NONE;
+
+	if(handle == NULL) {
+		__set_error_message(ERR_HANDLE, err_msg);
+		return MEDIA_SVC_PLUGIN_ERROR;
+	}
+
+	ret = media_svc_update_item_begin(handle, item_cnt);
+	if(ret < 0) {
+		__set_error_message(ret, err_msg);
+		return MEDIA_SVC_PLUGIN_ERROR;
+	}
+
+	return MEDIA_SVC_PLUGIN_ERROR_NONE;
+}
+
+int update_item_end(void * handle, char ** err_msg)
+{
+	int ret = MEDIA_SVC_PLUGIN_ERROR_NONE;
+
+	if(handle == NULL) {
+		__set_error_message(ERR_HANDLE, err_msg);
+		return MEDIA_SVC_PLUGIN_ERROR;
+	}
+
+	ret = media_svc_update_item_end(handle);
+	if(ret < 0) {
+		__set_error_message(ret, err_msg);
+		return MEDIA_SVC_PLUGIN_ERROR;
+	}
+
+	return MEDIA_SVC_PLUGIN_ERROR_NONE;
+}
+
+int update_item_meta(void * handle, const char *file_path, int storage_type, char ** err_msg)
+{
+	int ret = MEDIA_SVC_PLUGIN_ERROR_NONE;
+
+	if(handle == NULL) {
+		__set_error_message(ERR_HANDLE, err_msg);
+		return MEDIA_SVC_PLUGIN_ERROR;
+	}
+
+	if(file_path == NULL) {
+		__set_error_message(ERR_HANDLE, err_msg);
+		return MEDIA_SVC_PLUGIN_ERROR;
+	}
+
+	ret = media_svc_update_item_meta(handle, file_path, storage_type);
+	if(ret < 0) {
+		__set_error_message(ret, err_msg);
+		return MEDIA_SVC_PLUGIN_ERROR;
+	}
+
+	return MEDIA_SVC_PLUGIN_ERROR_NONE;
+}

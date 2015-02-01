@@ -252,6 +252,12 @@ int media_svc_get_pinyin(MediaSvcHandle *handle, const char * src_str, char **pi
 
 int media_svc_check_pinyin_support(bool *support);
 
+int media_svc_update_item_begin(MediaSvcHandle *handle, int data_cnt);
+
+int media_svc_update_item_end(MediaSvcHandle *handle);
+
+int media_svc_update_item_meta(MediaSvcHandle *handle, const char *file_path, int storage_type);
+
 /** @} */
 
 /**

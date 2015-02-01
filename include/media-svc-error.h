@@ -70,6 +70,8 @@
 #define MEDIA_INFO_ERROR_DATABASE_INTERNAL			-107		/**< DB internal error */
 #define MEDIA_INFO_ERROR_DATABASE_NO_RECORD		-108		/**< Item not found in DB */
 #define MEDIA_INFO_ERROR_DATABASE_CONSTRAINT		-109		/**< DB constraint fail. In case of INSERT, this means the record already exist */
+#define MEDIA_INFO_ERROR_DATABASE_BUSY         		-110		/**< DB is locked */
+#define MEDIA_INFO_ERROR_DATABASE_PERMISSION  		-111		/**< DB permission error */
 
 #define MEDIA_INFO_ERROR_SOCKET_CONN					-201		/**< Socket connect error */
 #define MEDIA_INFO_ERROR_SOCKET_MSG					-202		/**< Socket message error */

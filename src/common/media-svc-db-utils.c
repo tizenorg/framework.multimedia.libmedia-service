@@ -23,6 +23,7 @@
 #include <sys/stat.h>
 #include <db-util.h>
 #include <media-util.h>
+#include <errno.h>
 #include "media-svc-env.h"
 #include "media-svc-debug.h"
 #include "media-svc-error.h"
@@ -59,6 +60,7 @@ static int __media_svc_db_upgrade(sqlite3 *db_handle);
 				track_num			TEXT, \
 				description			TEXT, \
 				bitrate				INTEGER DEFAULT -1, \
+				bitpersample			INTEGER DEFAULT 0, \
 				samplerate			INTEGER DEFAULT -1, \
 				channel				INTEGER DEFAULT -1, \
 				duration			INTEGER DEFAULT -1, \
@@ -167,9 +169,6 @@ static int __media_svc_db_upgrade(sqlite3 *db_handle)
 {
 	int ret = MEDIA_INFO_ERROR_NONE;
 	char * sql = NULL;
-
-	ret = __media_svc_create_update_media_table(db_handle);
-	media_svc_retv_if(ret != MEDIA_INFO_ERROR_NONE, ret);
 
 	/*DROP MEDIA TABLE*/
 	sql = sqlite3_mprintf("DROP TABLE %s;", MEDIA_SVC_DB_TABLE_MEDIA);
@@ -375,16 +374,16 @@ int _media_svc_create_playlist_table(sqlite3 *db_handle)
 	/* Create playlist_view*/
 	sql = sqlite3_mprintf(" \
 		CREATE VIEW IF NOT EXISTS playlist_view AS \
-		SELECT p.playlist_id, p.name, p.thumbnail_path, media_count, pm._id as pm_id, pm.play_order, m.media_uuid, path, file_name, media_type, mime_type, size, added_time, modified_time, m.thumbnail_path, description, rating, favourite, author, provider, content_name, category, location_tag, age_rating, keyword, is_drm, storage_type, longitude, latitude, altitude, width, height, datetaken, orientation, title, album, artist, album_artist, genre, composer, year, recorded_date, copyright, track_num, bitrate, duration, played_count, last_played_time, last_played_position, samplerate, channel, weather, timeline, sync_status FROM playlist AS p \
+		SELECT p.playlist_id, p.name, p.thumbnail_path AS p_thumbnail_path, media_count, pm._id as pm_id, pm.play_order, m.media_uuid, path, file_name, media_type, mime_type, size, added_time, modified_time, m.thumbnail_path, description, rating, favourite, author, provider, content_name, category, location_tag, age_rating, keyword, is_drm, storage_type, longitude, latitude, altitude, width, height, datetaken, orientation, title, album, artist, album_artist, genre, composer, year, recorded_date, copyright, track_num, bitrate, duration, played_count, last_played_time, last_played_position, samplerate, channel, weather, burst_id, timeline, sync_status, bitpersample FROM playlist AS p \
 		INNER JOIN playlist_map AS pm \
 		INNER JOIN media AS m \
 		INNER JOIN (SELECT count(playlist_id) as media_count, playlist_id FROM playlist_map group by playlist_id) as cnt_tbl \
 				ON (p.playlist_id=pm.playlist_id AND pm.media_uuid = m.media_uuid AND cnt_tbl.playlist_id=pm.playlist_id AND m.validity=1) \
 		UNION \
-			SELECT playlist_id, name, thumbnail_path, 0, 0, -1, NULL, NULL, -1, -1, -1, -1, -1, NULL, NULL, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, -1, -1, 0, -1, -1, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, -1, -1, -1, -1, -1, -1, NULL, -1, NULL, -1, 0 FROM playlist \
+			SELECT playlist_id, name, thumbnail_path, 0, 0, -1, NULL, NULL, -1, -1, -1, -1, -1, NULL, NULL, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, -1, -1, 0, -1, -1, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, -1, -1, -1, -1, -1, -1, NULL, -1, NULL, NULL, -1, 0, 0 FROM playlist \
 				WHERE playlist_id NOT IN (select playlist_id from playlist_map) \
 		UNION \
-			SELECT playlist_id, name, thumbnail_path, 0, 0, -1, NULL, NULL, -1, -1, -1, -1, -1, NULL, NULL, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, -1, -1, 0, -1, -1, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, -1, -1, -1, -1, -1, -1, NULL, -1, NULL, -1, 0 FROM playlist \
+			SELECT playlist_id, name, thumbnail_path, 0, 0, -1, NULL, NULL, -1, -1, -1, -1, -1, NULL, NULL, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, -1, -1, 0, -1, -1, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, -1, -1, -1, -1, -1, -1, NULL, -1, NULL, NULL, -1, 0, 0 FROM playlist \
 				WHERE playlist_id IN (select pm.playlist_id from playlist_map AS pm INNER JOIN media AS m ON (pm.media_uuid= m.media_uuid) AND m.validity=0); \
 		");
 
@@ -492,14 +491,14 @@ int _media_svc_create_tag_table(sqlite3 *db_handle)
 	sql = sqlite3_mprintf("\
 				CREATE VIEW IF NOT EXISTS tag_view AS \
 				SELECT \
-					t.tag_id, t.name, media_count, tm._id as tm_id, m.media_uuid, path, file_name, media_type, mime_type, size, added_time, modified_time, thumbnail_path, description, rating, favourite, author, provider, content_name, category, location_tag, age_rating, keyword, is_drm, storage_type, longitude, latitude, altitude, width, height, datetaken, orientation, title, album, artist, album_artist, genre, composer, year, recorded_date, copyright, track_num, bitrate, duration, played_count, last_played_time, last_played_position, samplerate, channel, weather, timeline, sync_status FROM tag AS t \
+					t.tag_id, t.name, media_count, tm._id as tm_id, m.media_uuid, path, file_name, media_type, mime_type, size, added_time, modified_time, thumbnail_path, description, rating, favourite, author, provider, content_name, category, location_tag, age_rating, keyword, is_drm, storage_type, longitude, latitude, altitude, width, height, datetaken, orientation, title, album, artist, album_artist, genre, composer, year, recorded_date, copyright, track_num, bitrate, duration, played_count, last_played_time, last_played_position, samplerate, channel, weather, timeline, sync_status, bitpersample FROM tag AS t \
 				INNER JOIN tag_map AS tm \
 				INNER JOIN media AS m \
 				INNER JOIN (SELECT count(tag_id) as media_count, tag_id FROM tag_map group by tag_id) as cnt_tbl \
 						 ON (t.tag_id=tm.tag_id AND tm.media_uuid = m.media_uuid AND cnt_tbl.tag_id=tm.tag_id AND m.validity=1) \
 				UNION \
 				SELECT \
-					tag_id, name, 0, 0,  NULL, NULL, -1, -1, -1, -1, -1, NULL, NULL, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, -1, -1,  0, -1, -1, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL,NULL, NULL, NULL, NULL, -1, -1, -1, -1, -1, -1, NULL, -1, NULL, -1, 0 FROM tag \
+					tag_id, name, 0, 0,  NULL, NULL, -1, -1, -1, -1, -1, NULL, NULL, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, -1, -1,  0, -1, -1, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL,NULL, NULL, NULL, NULL, -1, -1, -1, -1, -1, -1, NULL, -1, NULL, -1, 0, 0 FROM tag \
 				WHERE tag_id \
 				NOT IN (select tag_id from tag_map); \
 				");
@@ -613,8 +612,11 @@ int _media_svc_sql_prepare_to_step(sqlite3 *handle, const char *sql_str, sqlite3
 
 	if (err != SQLITE_OK) {
 		media_svc_error ("prepare error %d[%s]", err, sqlite3_errmsg(handle));
-		if (err == SQLITE_CORRUPT)
+		if (err == SQLITE_CORRUPT) {
 			return MEDIA_INFO_ERROR_DATABASE_CORRUPT;
+		} else if (err == SQLITE_PERM) {
+			return MEDIA_INFO_ERROR_DATABASE_PERMISSION;
+		}
 
 		return MEDIA_INFO_ERROR_DATABASE_INTERNAL;
 	}
@@ -646,8 +648,11 @@ int _media_svc_sql_prepare_to_step_simple(sqlite3 *handle, const char *sql_str, 
 
 	if (err != SQLITE_OK) {
 		media_svc_error ("prepare error %d[%s]", err, sqlite3_errmsg(handle));
-		if (err == SQLITE_CORRUPT)
+		if (err == SQLITE_CORRUPT) {
 			return MEDIA_INFO_ERROR_DATABASE_CORRUPT;
+		} else if (err == SQLITE_PERM) {
+			return MEDIA_INFO_ERROR_DATABASE_PERMISSION;
+		}
 
 		return MEDIA_INFO_ERROR_DATABASE_INTERNAL;
 	}

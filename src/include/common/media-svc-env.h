@@ -36,7 +36,7 @@ extern "C" {
  */
 
 #define MEDIA_SVC_DB_NAME 						MEDIA_DB_NAME		/**<  media db name*/
-#define LATEST_VERSION_NUMBER					2
+#define LATEST_VERSION_NUMBER					3
 
 /**
  * DB table information
@@ -106,6 +106,7 @@ typedef struct {
 	int		orientation;			/**< orientation*/
 	int		rating;				/**< user defined rating */
 	char	*	weather;				/**< weather of image */
+	int		bitpersample;				/**< bitrate*/
 
 	char	*	file_name_pinyin;				/**< pinyin for file_name*/
 	char	*	title_pinyin;					/**< pinyin for title*/
@@ -150,6 +151,7 @@ typedef enum{
 	MEDIA_SVC_QUERY_INSERT_ITEM,
 	MEDIA_SVC_QUERY_SET_ITEM_VALIDITY,
 	MEDIA_SVC_QUERY_MOVE_ITEM,
+	MEDIA_SVC_QUERY_UPDATE_ITEM
 } media_svc_query_type_e;
 
 #ifdef __cplusplus

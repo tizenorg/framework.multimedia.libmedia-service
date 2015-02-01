@@ -24,6 +24,8 @@
 #include <media-svc.h>
 #include <media-svc-noti.h>
 
+#define SAFE_FREE(src)      		{ if(src) {free(src); src = NULL;}}
+
 GMainLoop *g_loop = NULL;
 MediaSvcHandle *g_db_handle = NULL;
 
@@ -89,6 +91,7 @@ gboolean _send_noti_batch_operations(gpointer data)
 	ret = media_svc_get_storage_type(path, &storage_type);
 	if (ret != MEDIA_INFO_ERROR_NONE) {
 		media_svc_error("media_svc_get_storage_type failed : %d (%s)", ret, path);
+		SAFE_FREE(user_str);
         return FALSE;
 	}
 
@@ -97,7 +100,7 @@ gboolean _send_noti_batch_operations(gpointer data)
 
 	ret = media_svc_insert_item_begin(g_db_handle, 100, TRUE, getpid());
 	//ret = media_svc_insert_item_begin(g_db_handle, 100);
-	for (idx = 0; idx < 16; idx++) {
+	for (idx = 0; idx < 10; idx++) {
 		char filepath[255] = {0,};
 		snprintf(filepath, sizeof(filepath), "%s%d.jpg", "/opt/usr/media/test/image", idx+1);
 		media_svc_debug("File : %s\n", filepath);
@@ -112,6 +115,7 @@ gboolean _send_noti_batch_operations(gpointer data)
 
 	ret = media_svc_insert_item_end(g_db_handle);
 
+	SAFE_FREE(user_str);
 	return FALSE;
 }
 #endif
@@ -131,12 +135,14 @@ gboolean _send_noti_operations(gpointer data)
 	ret = media_svc_get_storage_type(path, &storage_type);
 	if (ret != MEDIA_INFO_ERROR_NONE) {
 		media_svc_error("media_svc_get_storage_type failed : %d (%s)", ret, path);
+		SAFE_FREE(user_str);
 		return FALSE;
 	}
 
 	ret = media_svc_insert_item_immediately(g_db_handle, storage_type, path);
 	if (ret != MEDIA_INFO_ERROR_NONE) {
 		media_svc_error("media_svc_insert_item_immediately failed : %d", ret);
+		SAFE_FREE(user_str);
 		return FALSE;
 	}
 

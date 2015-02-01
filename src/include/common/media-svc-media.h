@@ -34,7 +34,7 @@ int _media_svc_update_item_with_data(sqlite3 *handle, media_svc_content_info_s *
 int _media_svc_get_thumbnail_path_by_path(sqlite3 *handle, const char *path, char *thumbnail_path);
 int _media_svc_get_media_type_by_path(sqlite3 *handle, const char *path, int *media_type);
 int _media_svc_get_burst_id(sqlite3 *handle, int *id);
-int _media_svc_delete_item_by_path(sqlite3 *handle, const char *path);
+int _media_svc_delete_item_by_path(sqlite3 *handle, const char *path, bool stack_query);
 int _media_svc_truncate_table(sqlite3 *handle, media_svc_storage_type_e storage_type);
 int _media_svc_delete_invalid_items(sqlite3 *handle, media_svc_storage_type_e storage_type);
 int _media_svc_delete_invalid_folder_items(sqlite3 *handle, const char *folder_path);
@@ -49,5 +49,6 @@ int _media_svc_get_noti_info(sqlite3 *handle, const char *path, int update_item,
 int _media_svc_count_invalid_folder_items(sqlite3 *handle, const char *folder_path, int *count);
 int _media_svc_get_thumbnail_count(sqlite3 *handle, const char *thumb_path, int *count);
 int _media_svc_get_fileinfo_by_path(sqlite3 *handle, const char *path, time_t *modified_time, unsigned long long *size);
+int _media_svc_update_meta_with_data(sqlite3 *handle, media_svc_content_info_s *content_info);
 
 #endif /*_MEDIA_SVC_MEDIA_H_*/

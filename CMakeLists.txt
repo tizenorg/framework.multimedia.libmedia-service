@@ -17,6 +17,7 @@ SET(SRCS
 	src/common/media-svc-noti.c
 	src/common/media-svc-localize-utils.c
 	src/common/media-svc-localize_ch.c
+	src/common/media-svc-localize_tw.c
 	)
 
 SET(HASH_SRCS
@@ -51,14 +52,9 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/include/
 FIND_PROGRAM(UNAME NAMES uname)
 EXEC_PROGRAM("${UNAME}" ARGS "-m" OUTPUT_VARIABLE "ARCH")
 
-IF("${ARCH}" STREQUAL "armv7l")
-INCLUDE(FindPkgConfig)
-pkg_check_modules(pkgs REQUIRED glib-2.0 dlog sqlite3 db-util libexif mm-common mm-fileinfo drm-client media-thumbnail libmedia-utils aul uuid)
-ELSE ("${ARCH}" STREQUAL "armv7l")
-INCLUDE(FindPkgConfig)
-pkg_check_modules(pkgs REQUIRED glib-2.0 dlog sqlite3 db-util libexif mm-common mm-fileinfo drm-client media-thumbnail libmedia-utils aul uuid)
-ENDIF("${ARCH}" STREQUAL "armv7l")
 
+INCLUDE(FindPkgConfig)
+pkg_check_modules(pkgs REQUIRED glib-2.0 dlog sqlite3 db-util libexif mm-common mm-fileinfo media-thumbnail libmedia-utils aul uuid vconf)
 
 FOREACH(flag ${pkgs_CFLAGS})
 	SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} ${flag}")
@@ -80,9 +76,6 @@ ADD_DEFINITIONS("-DPACKAGE=\"${PACKAGE}\"")
 ADD_DEFINITIONS("-DPACKAGE_NAME=\"${PKGNAME}\"")
 ADD_DEFINITIONS("-DPREFIX=\"${PREFIX}\"")
 ADD_DEFINITIONS("-D_FILE_OFFSET_BITS=64")
-ADD_DEFINITIONS("-DCOMMERCIAL_FEATURE")
-#ADD_DEFINITIONS("-D_PERFORMANCE_CHECK_")
-#ADD_DEFINITIONS("-D_USE_LOG_FILE_")
 
 SET(CMAKE_EXE_LINKER_FLAGS "-Wl,--as-needed -Wl,--hash-style=both")
 CONFIGURE_FILE(libmedia-service.pc.in libmedia-service.pc @ONLY)

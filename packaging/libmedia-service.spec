@@ -1,6 +1,6 @@
 Name:       libmedia-service
 Summary:    Media information service library for multimedia applications.
-Version: 0.2.102
+Version: 0.2.121
 Release:    1
 Group:      System/Libraries
 License:    Apache License, Version 2.0
@@ -19,10 +19,10 @@ BuildRequires:  pkgconfig(sqlite3)
 BuildRequires:  pkgconfig(db-util)
 BuildRequires:  pkgconfig(mm-fileinfo)
 BuildRequires:  pkgconfig(media-thumbnail)
-BuildRequires:  pkgconfig(drm-client)
 BuildRequires:  pkgconfig(libmedia-utils)
 BuildRequires:  pkgconfig(uuid)
 BuildRequires:  pkgconfig(icu-i18n)
+BuildRequires:  pkgconfig(vconf)
 
 %description
 Media information service library for multimedia applications.
@@ -40,11 +40,14 @@ Media information service library for multimedia applications. (development file
 
 %build
 
+%if 0%{?sec_build_binary_debug_enable}
 export CFLAGS="$CFLAGS -DTIZEN_DEBUG_ENABLE"
 export CXXFLAGS="$CXXFLAGS -DTIZEN_DEBUG_ENABLE"
 export FFLAGS="$FFLAGS -DTIZEN_DEBUG_ENABLE"
+%endif
 
 cmake . -DCMAKE_INSTALL_PREFIX=%{_prefix}
+
 make %{?jobs:-j%jobs}
 
 %install

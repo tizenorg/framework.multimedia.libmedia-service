@@ -35,6 +35,7 @@ typedef struct{
 static __thread GList *g_media_svc_item_validity_query_list = NULL;
 static __thread GList *g_media_svc_insert_item_query_list = NULL;
 __thread GList *g_media_svc_move_item_query_list = NULL;
+static __thread GList *g_media_svc_update_item_query_list = NULL;
 
 static int __media_svc_count_invalid_records_with_thumbnail(sqlite3 *handle, media_svc_storage_type_e storage_type, int *count);
 static int __media_svc_get_invalid_records_with_thumbnail(sqlite3 *handle, media_svc_storage_type_e storage_type,
@@ -169,7 +170,7 @@ int _media_svc_insert_item_with_data(sqlite3 *handle, media_svc_content_info_s *
 
 	char * db_fields = "media_uuid, path, file_name, media_type, mime_type, size, added_time, modified_time, folder_uuid, \
 					thumbnail_path, title, album_id, album, artist, album_artist, genre, composer, year, recorded_date, copyright, track_num, description,\
-					bitrate, samplerate, channel, duration, longitude, latitude, altitude, width, height, datetaken, orientation,\
+					bitrate, bitpersample, samplerate, channel, duration, longitude, latitude, altitude, width, height, datetaken, orientation,\
 					rating, is_drm, storage_type, burst_id, timeline, weather, sync_status, \
 					file_name_pinyin, title_pinyin, album_pinyin, artist_pinyin, album_artist_pinyin, genre_pinyin, composer_pinyin, copyright_pinyin, description_pinyin ";
 
@@ -235,7 +236,7 @@ int _media_svc_insert_item_with_data(sqlite3 *handle, media_svc_content_info_s *
 
 	char *sql = sqlite3_mprintf("INSERT INTO %s (%s) VALUES (%Q, %Q, %Q, %d, %Q, %lld, %d, %d, %Q, \
 													%Q, %Q, %d, %Q, %Q, %Q, %Q, %Q, %Q, %Q, %Q, %Q, %Q, \
-													%d, %d, %d, %d, %.6f, %.6f, %.6f, %d, %d, %Q, %d, \
+													%d, %d, %d, %d, %d, %.6f, %.6f, %.6f, %d, %d, %Q, %d, \
 													%d, %d, %d, %Q, %d, %Q, %d, \
 													%Q, %Q, %Q, %Q, %Q, %Q, %Q, %Q, %Q);",
 		MEDIA_SVC_DB_TABLE_MEDIA, db_fields,
@@ -262,6 +263,7 @@ int _media_svc_insert_item_with_data(sqlite3 *handle, media_svc_content_info_s *
 		content_info->media_meta.track_num,
 		content_info->media_meta.description,	//
 		content_info->media_meta.bitrate,
+		content_info->media_meta.bitpersample,
 		content_info->media_meta.samplerate,
 		content_info->media_meta.channel,
 		content_info->media_meta.duration,
@@ -311,6 +313,76 @@ int _media_svc_insert_item_with_data(sqlite3 *handle, media_svc_content_info_s *
 	return MEDIA_INFO_ERROR_NONE;
 }
 
+int _media_svc_update_meta_with_data(sqlite3 *handle, media_svc_content_info_s *content_info)
+{
+	int ret = MEDIA_INFO_ERROR_NONE;
+
+	/* This sql is due to sqlite3_mprintf's wrong operation when using floating point in the text format */
+	/* This code will be removed when sqlite3_mprintf works clearly */
+	char *test_sql = sqlite3_mprintf("%f, %f, %f", content_info->media_meta.longitude, content_info->media_meta.latitude, content_info->media_meta.altitude);
+	sqlite3_free(test_sql);
+
+	/*Update Pinyin If Support Pinyin*/
+	if(_media_svc_check_pinyin_support())
+	{
+		if(STRING_VALID(content_info->file_name))
+			_media_svc_get_pinyin_str(content_info->file_name, &content_info->file_name_pinyin);
+		if(STRING_VALID(content_info->media_meta.title))
+			_media_svc_get_pinyin_str(content_info->media_meta.title, &content_info->media_meta.title_pinyin);
+		if(STRING_VALID(content_info->media_meta.album))
+			_media_svc_get_pinyin_str(content_info->media_meta.album, &content_info->media_meta.album_pinyin);
+		if(STRING_VALID(content_info->media_meta.artist))
+			_media_svc_get_pinyin_str(content_info->media_meta.artist, &content_info->media_meta.artist_pinyin);
+		if(STRING_VALID(content_info->media_meta.album_artist))
+			_media_svc_get_pinyin_str(content_info->media_meta.album_artist, &content_info->media_meta.album_artist_pinyin);
+		if(STRING_VALID(content_info->media_meta.genre))
+			_media_svc_get_pinyin_str(content_info->media_meta.genre, &content_info->media_meta.genre_pinyin);
+		if(STRING_VALID(content_info->media_meta.composer))
+			_media_svc_get_pinyin_str(content_info->media_meta.composer, &content_info->media_meta.composer_pinyin);
+		if(STRING_VALID(content_info->media_meta.copyright))
+			_media_svc_get_pinyin_str(content_info->media_meta.copyright, &content_info->media_meta.copyright_pinyin);
+		if(STRING_VALID(content_info->media_meta.description))
+			_media_svc_get_pinyin_str(content_info->media_meta.description, &content_info->media_meta.description_pinyin);
+	}
+
+	char *sql = sqlite3_mprintf("UPDATE %s SET title=%Q, album=%Q, artist=%Q, album_artist=%Q, genre=%Q, composer=%Q, copyright=%Q, description=%Q, \
+		file_name_pinyin=%Q, title_pinyin=%Q, album_pinyin=%Q, artist_pinyin=%Q, album_artist_pinyin=%Q, genre_pinyin=%Q, composer_pinyin=%Q, copyright_pinyin=%Q, description_pinyin=%Q \
+		WHERE path=%Q",
+		MEDIA_SVC_DB_TABLE_MEDIA,
+		content_info->media_meta.title,
+		content_info->media_meta.album,
+		content_info->media_meta.artist,
+		content_info->media_meta.album_artist,
+		content_info->media_meta.genre,
+		content_info->media_meta.composer,
+		content_info->media_meta.copyright,
+		content_info->media_meta.description,
+		content_info->file_name_pinyin,
+		content_info->media_meta.title_pinyin,
+		content_info->media_meta.album_pinyin,
+		content_info->media_meta.artist_pinyin,
+		content_info->media_meta.album_artist_pinyin,
+		content_info->media_meta.genre_pinyin,
+		content_info->media_meta.composer_pinyin,
+		content_info->media_meta.copyright_pinyin,
+		content_info->media_meta.description_pinyin,
+		content_info->path
+		);
+
+	media_svc_error("");
+	if (sql != NULL) {
+		media_svc_debug("query : %s", sql);
+		_media_svc_sql_query_add(&g_media_svc_update_item_query_list, &sql);
+	} else {
+		media_svc_error("sqlite3_mprintf failed");
+		ret = MEDIA_INFO_ERROR_OUT_OF_MEMORY;
+	}
+
+	media_svc_error("");
+
+	return ret;
+}
+
 int _media_svc_update_item_with_data(sqlite3 *handle, media_svc_content_info_s *content_info)
 {
 	int ret = MEDIA_INFO_ERROR_NONE;
@@ -323,6 +395,8 @@ int _media_svc_update_item_with_data(sqlite3 *handle, media_svc_content_info_s *
 	/*Update Pinyin If Support Pinyin*/
 	if(_media_svc_check_pinyin_support())
 	{
+		if(STRING_VALID(content_info->file_name))
+			_media_svc_get_pinyin_str(content_info->file_name, &content_info->file_name_pinyin);
 		if(STRING_VALID(content_info->media_meta.title))
 			_media_svc_get_pinyin_str(content_info->media_meta.title, &content_info->media_meta.title_pinyin);
 		if(STRING_VALID(content_info->media_meta.album))
@@ -344,7 +418,7 @@ int _media_svc_update_item_with_data(sqlite3 *handle, media_svc_content_info_s *
 	char *sql = sqlite3_mprintf("UPDATE %s SET \
 		size=%lld, modified_time=%d, thumbnail_path=%Q, title=%Q, album_id=%d, album=%Q, artist=%Q, album_artist=%Q, genre=%Q, \
 		composer=%Q, year=%Q, recorded_date=%Q, copyright=%Q, track_num=%Q, description=%Q, \
-		bitrate=%d, samplerate=%d, channel=%d, duration=%d, longitude=%f, latitude=%f, altitude=%f, width=%d, height=%d, datetaken=%Q, \
+		bitrate=%d, bitpersample=%d, samplerate=%d, channel=%d, duration=%d, longitude=%f, latitude=%f, altitude=%f, width=%d, height=%d, datetaken=%Q, \
 													orientation=%d WHERE path=%Q",
 		MEDIA_SVC_DB_TABLE_MEDIA,
 		content_info->size,
@@ -363,6 +437,7 @@ int _media_svc_update_item_with_data(sqlite3 *handle, media_svc_content_info_s *
 		content_info->media_meta.track_num,
 		content_info->media_meta.description,
 		content_info->media_meta.bitrate,
+		content_info->media_meta.bitpersample,
 		content_info->media_meta.samplerate,
 		content_info->media_meta.channel,
 		content_info->media_meta.duration,
@@ -428,13 +503,22 @@ int _media_svc_get_media_type_by_path(sqlite3 *handle, const char *path, int *me
 	return MEDIA_INFO_ERROR_NONE;
 }
 
-int _media_svc_delete_item_by_path(sqlite3 *handle, const char *path)
+int _media_svc_delete_item_by_path(sqlite3 *handle, const char *path, bool stack_query)
 {
 	int ret = MEDIA_INFO_ERROR_NONE;
 	char *sql = sqlite3_mprintf("DELETE FROM %s WHERE path='%q'", MEDIA_SVC_DB_TABLE_MEDIA, path);
 
-	ret = _media_svc_sql_query(handle, sql);
-	sqlite3_free(sql);
+	if(!stack_query) {
+		ret = _media_svc_sql_query(handle, sql);
+		sqlite3_free(sql);
+		if (ret != MEDIA_INFO_ERROR_NONE) {
+			media_svc_error("failed to delete item");
+			return ret;
+		}
+	} else {
+		media_svc_debug("query : %s", sql);
+		_media_svc_sql_query_add(&g_media_svc_insert_item_query_list, &sql);
+	}
 
 	return ret;
 }

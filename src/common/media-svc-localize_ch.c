@@ -2226,6 +2226,7 @@ int _media_svc_convert_chinese_to_pinyin(const char *src, pinyin_name_s **name, 
 	for (count = 0; count < len; count++) {
 		if (temp_result[count] == 0xFEFF ||temp_result[count] == 0xFFFE) {//  ||temp_result[count] == 0xFF) {
 			media_svc_error("FIND BOM, GO TO THE NEXT CHARACTER");
+			pinyin_spell_count[count] = 1;
 			continue;
 		}
 
@@ -2268,6 +2269,9 @@ int _media_svc_convert_chinese_to_pinyin(const char *src, pinyin_name_s **name, 
 	int pinyin_initial_len = sizeof(char) * (len * 5 + 1);
 	for(i=0; i < count ; i++) {
 		for(j=0;j<total_count;j++) {
+			if (pinyin_spell_count[i] == 0)
+				continue;
+
 			int index = (j/repeat) %pinyin_spell_count[i];
 
 			if (i==0) {
