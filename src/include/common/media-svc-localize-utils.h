@@ -1,9 +1,7 @@
 /*
- * libmedia-service
+ * Media Service
  *
- * Copyright (c) 2000 - 2011 Samsung Electronics Co., Ltd. All rights reserved.
- *
- * Contact: Hyunjun Ko <zzoon.ko@samsung.com>, Haejeong Kim <backto.kim@samsung.com>
+ * Copyright (c) 2010 - 2012 Samsung Electronics Co., Ltd. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +16,17 @@
  * limitations under the License.
  *
  */
+#ifndef __MEDIA_SVC_LOCALIZE_UTILS_H__
+#define __MEDIA_SVC_LOCALIZE_UTILS_H__
 
-#ifndef _MEDIA_SVC_HASH_
-#define _MEDIA_SVC_HASH_
+#define array_sizeof(a) (sizeof(a) / sizeof(a[0]))
 
-int mb_svc_generate_hash_code(const char *origin_path, char *hash_code, int max_length);
+#define MEDIA_SVC_COMPARE_BETWEEN(left_range, value, right_range) (((left_range) <= (value)) && ((value) <= (right_range)))
 
-#endif /*MEDIA_SVC_HASH_*/
+int _media_svc_check_utf8(char c);
 
+int SAFE_SNPRINTF(char **buf, int *buf_size, int len, const char *src);
+
+int _media_svc_collation_str(const char *src, char **dest);
+
+#endif // __MEDIA_SVC_LOCALIZE_UTILS_H__

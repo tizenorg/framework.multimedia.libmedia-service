@@ -63,17 +63,23 @@
 
 #define MEDIA_INFO_ERROR_DATABASE_CONNECT			-100		/**< DB connect error */
 #define MEDIA_INFO_ERROR_DATABASE_DISCONNECT		-101		/**< DB disconnect error */
+#define MEDIA_INFO_ERROR_DATABASE_CORRUPT		-102		/**< DB corrut error */
 #define MEDIA_INFO_ERROR_DATABASE_QUERY				-104		/**< DB query error */
 #define MEDIA_INFO_ERROR_DATABASE_TABLE_OPEN		-105		/**< DB table open error */
 #define MEDIA_INFO_ERROR_DATABASE_INVALID			-106		/**< DB invalid error */
 #define MEDIA_INFO_ERROR_DATABASE_INTERNAL			-107		/**< DB internal error */
 #define MEDIA_INFO_ERROR_DATABASE_NO_RECORD		-108		/**< Item not found in DB */
+#define MEDIA_INFO_ERROR_DATABASE_CONSTRAINT		-109		/**< DB constraint fail. In case of INSERT, this means the record already exist */
+#define MEDIA_INFO_ERROR_DATABASE_BUSY         		-110		/**< DB is locked */
+#define MEDIA_INFO_ERROR_DATABASE_PERMISSION  		-111		/**< DB permission error */
 
 #define MEDIA_INFO_ERROR_SOCKET_CONN					-201		/**< Socket connect error */
 #define MEDIA_INFO_ERROR_SOCKET_MSG					-202		/**< Socket message error */
 #define MEDIA_INFO_ERROR_SOCKET_SEND					-203		/**< Socket send error */
 #define MEDIA_INFO_ERROR_SOCKET_RECEIVE				-204		/**< Socket receive error */
 #define MEDIA_INFO_ERROR_SOCKET_RECEIVE_TIMEOUT		-205		/**< Socket time out */
+
+#define MEDIA_INFO_ERROR_SEND_NOTI_FAIL				-301		/**< Sending Notifications fail */
 
 #define MEDIA_INFO_ERROR_INTERNAL						-998		/**< Internal error */
 #define MEDIA_INFO_ERROR_UNKNOWN					-999		/**< Unknown error */

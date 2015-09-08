@@ -31,5 +31,7 @@ int _media_svc_append_folder(sqlite3 *handle, media_svc_storage_type_e storage_t
 int _media_svc_update_folder_modified_time_by_folder_uuid(sqlite3 *handle, const char *folder_uuid, const char *folder_path, bool stack_query);
 int _media_svc_get_and_append_folder_id_by_path(sqlite3 *handle, const char *path, media_svc_storage_type_e storage_type, char *folder_id);
 int _media_svc_update_folder_table(sqlite3 *handle);
+int _media_svc_get_all_folders(sqlite3 *handle, char* start_path, char ***folder_list, time_t **modified_time_list, int **item_num_list, int *count);
+int _media_svc_get_folder_info_by_foldername(sqlite3 *handle, const char *folder_name, char *folder_id, time_t *modified_time);
 
 #endif /*_MEDIA_SVC_MEDIA_FOLDER_H_*/

@@ -27,6 +27,6 @@
 int _media_svc_get_album_id(sqlite3 *handle, const char *album, const char *artist, int * album_id);
 int _media_svc_get_album_art_by_album_id(sqlite3 *handle, int album_id, char **album_art);
 int _media_svc_append_album(sqlite3 *handle, const char *album, const char *artist, const char *album_art, int * album_id);
-
+int _media_svc_get_media_count_with_album_id_by_path(sqlite3 *handle, const char *path, int *count);
 
 #endif /*_MEDIA_SVC_ALBUM_H_*/

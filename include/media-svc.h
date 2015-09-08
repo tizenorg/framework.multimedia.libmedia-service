@@ -26,7 +26,9 @@
 
 #include "media-svc-types.h"
 #include "media-svc-error.h"
-
+#include <media-util-noti.h>
+#include <time.h>
+#include <stdbool.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -59,7 +61,7 @@ extern "C" {
  *	@see		media_svc_disconnect
  *	@pre		None
  *	@post		call media_svc_disconnect to disconnect media database.
- *	@remark	The database name is "/opt/dbspace/.media.db".
+ *	@remark	The database name is "/opt/usr/dbspace/.media.db".
  * 	@par example
  * 	@code
 
@@ -73,7 +75,7 @@ void connect_media_db()
 	// connect to the media database
 	ret = media_svc_connect(&my_handle);
 
-	if (ret < 0)
+	if(ret != MEDIA_INFO_ERROR_NONE)
 	{
 		printf("Fatal error to connect DB\n");
 		return;
@@ -97,7 +99,7 @@ int media_svc_connect(MediaSvcHandle **handle);
  *	@see		media_svc_connect
  *	@pre		call media_svc_connect to connect media database.
  *	@post		None
- *	@remark	The database name is "/opt/dbspace/.media.db".
+ *	@remark	The database name is "/opt/usr/dbspace/.media.db".
  * 	@par example
  * 	@code
 
@@ -111,7 +113,7 @@ void disconnect_media_db()
 	// connect to the media database
 	ret = media_svc_connect(&my_handle);
 
-	if (ret < 0)
+	if(ret != MEDIA_INFO_ERROR_NONE)
 	{
 		printf("Fatal error to connect DB\n");
 		return;
@@ -123,7 +125,7 @@ void disconnect_media_db()
 	
 
 	ret = media_svc_disconnect(my_handle);
-	if (ret < 0)
+	if(ret != MEDIA_INFO_ERROR_NONE)
 	{
 		printf("Fatal error to disconnect DB\n");
 	}
@@ -146,7 +148,7 @@ int media_svc_disconnect(MediaSvcHandle *handle);
  *	@see		None
  *	@pre		call media_svc_connect to connect media database.
  *	@post		call media_svc_disconnect to disconnect media database.
- *	@remark	The database name is "/opt/dbspace/.media.db".
+ *	@remark	The database name is "/opt/usr/dbspace/.media.db".
  * 	@par example
  * 	@code
 
@@ -160,20 +162,20 @@ void create_media_db_table()
 	// connect to the media database
 	ret = media_svc_connect(&my_handle);
 
-	if (ret < 0)
+	if(ret != MEDIA_INFO_ERROR_NONE)
 	{
 		printf("Fatal error to connect DB\n");
 		return;
 	}
 
 	ret = media_svc_create_table(my_handle);
-	if (ret < 0)
+	if(ret != MEDIA_INFO_ERROR_NONE)
 	{
 		printf("Fatal error to create DB table\n");
 	}
 
 	ret = media_svc_disconnect(my_handle);
-	if (ret < 0)
+	if(ret != MEDIA_INFO_ERROR_NONE)
 	{
 		printf("Fatal error to disconnect DB\n");
 	}
@@ -190,13 +192,13 @@ int media_svc_check_item_exist_by_path(MediaSvcHandle *handle, const char *path)
 
 int media_svc_insert_folder(MediaSvcHandle *handle, media_svc_storage_type_e storage_type, const char *path);
 
-int media_svc_insert_item_begin(MediaSvcHandle *handle, int data_cnt);
+int media_svc_insert_item_begin(MediaSvcHandle *handle, int with_noti, int data_cnt, int from_pid);
 
 int media_svc_insert_item_end(MediaSvcHandle *handle);
 
-int media_svc_insert_item_bulk(MediaSvcHandle *handle, media_svc_storage_type_e storage_type, const char *path, const char *mime_type, media_svc_media_type_e media_type);
+int media_svc_insert_item_bulk(MediaSvcHandle *handle, media_svc_storage_type_e storage_type, const char *path, int is_burst);
 
-int media_svc_insert_item_immediately(MediaSvcHandle *handle, media_svc_storage_type_e storage_type, const char *path, const char *mime_type, media_svc_media_type_e media_type);
+int media_svc_insert_item_immediately(MediaSvcHandle *handle, media_svc_storage_type_e storage_type, const char *path);
 
 int media_svc_move_item_begin(MediaSvcHandle *handle, int data_cnt);
 
@@ -216,11 +218,45 @@ int media_svc_delete_all_items_in_storage(MediaSvcHandle *handle, media_svc_stor
 
 int media_svc_delete_invalid_items_in_storage(MediaSvcHandle *handle, media_svc_storage_type_e storage_type);
 
+int media_svc_delete_invalid_items_in_folder(MediaSvcHandle *handle, const char *folder_path);
+
 int media_svc_set_all_storage_items_validity(MediaSvcHandle *handle, media_svc_storage_type_e storage_type, int validity);
 
-int media_svc_refresh_item(MediaSvcHandle *handle, media_svc_storage_type_e storage_type, const char *path, media_svc_media_type_e media_type);
+int media_svc_set_folder_items_validity(MediaSvcHandle *handle, const char *folder_path, int validity, int recursive);
+
+int media_svc_refresh_item(MediaSvcHandle *handle, media_svc_storage_type_e storage_type, const char *path);
 
 int media_svc_rename_folder(MediaSvcHandle *handle, const char *src_path, const char *dst_path);
+
+int media_svc_request_update_db(const char *db_query);
+
+int media_svc_get_storage_type(const char *path, media_svc_storage_type_e *storage_type);
+
+int media_svc_get_file_info(MediaSvcHandle *handle, const char *path, time_t *modified_time, unsigned long long *size);
+
+int media_svc_send_dir_update_noti(MediaSvcHandle *handle, const char *dir_path);
+
+int media_svc_count_invalid_items_in_folder(MediaSvcHandle *handle, const char *folder_path, int *count);
+
+int media_svc_check_db_upgrade(MediaSvcHandle *handle);
+
+int media_svc_check_db_corrupt(MediaSvcHandle *handle);
+
+int media_svc_get_folder_list(MediaSvcHandle *handle, char* start_path, char ***folder_list, time_t **modified_time_list, int **item_num_list, int *count);
+
+int media_svc_update_folder_time(MediaSvcHandle *handle, const char *folder_path);
+
+int media_svc_publish_noti(MediaSvcHandle *handle, media_item_type_e update_item, media_item_update_type_e update_type, const char *path, media_type_e media_type, const char *uuid, const char *mime_type);
+
+int media_svc_get_pinyin(MediaSvcHandle *handle, const char * src_str, char **pinyin_str);
+
+int media_svc_check_pinyin_support(bool *support);
+
+int media_svc_update_item_begin(MediaSvcHandle *handle, int data_cnt);
+
+int media_svc_update_item_end(MediaSvcHandle *handle);
+
+int media_svc_update_item_meta(MediaSvcHandle *handle, const char *file_path, int storage_type);
 
 /** @} */
 

@@ -27,50 +27,70 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <dlog.h>
+#include <errno.h>
 
 #ifdef LOG_TAG
 #undef LOG_TAG
 #endif
 
-#define LOG_TAG "Media-Service"
+#define LOG_TAG "MEDIA_SERVICE"
 
 #define media_svc_debug(fmt, arg...) do { \
-			LOGD("[%s-%d]\n"fmt"", __FUNCTION__, __LINE__,##arg);     \
+			LOGD(" "fmt"", ##arg);     \
 		} while (0)
 
 #define media_svc_error(fmt, arg...) do { \
-			LOGE("%s-%d]\n"fmt"", __FUNCTION__, __LINE__,##arg);     \
+			LOGE(" "fmt"", ##arg);     \
 		} while (0)
 
 #define media_svc_debug_func() do { \
-			LOGD("[%s-%d]\n", __FUNCTION__, __LINE__);     \
+			LOGD("");     \
 		} while (0)
 
 #define media_svc_retm_if(expr, fmt, arg...) do { \
 			if(expr) { \
-				LOGE("[%s-%d]\n"fmt"", __FUNCTION__, __LINE__,##arg);   \
+				LOGE(" "fmt"", ##arg);   \
 				return; \
 			} \
 		} while (0)
 #define media_svc_retv_if(expr, val) do { \
 			if(expr) { \
-				LOGE("[%s-%d]\n", __FUNCTION__, __LINE__);     \
+				LOGE("");     \
 				return (val); \
 			} \
 		} while (0)
 #define media_svc_retvm_if(expr, val, fmt, arg...) do { \
 			if(expr) { \
-				LOGE("[%s-%d]\n"fmt"", __FUNCTION__, __LINE__,##arg); 	\
+				LOGE(" "fmt"", ##arg); 	\
 				return (val); \
 			} \
 		} while (0)
 
 #define media_svc_retv_del_if(expr, val, p_str) do { \
 			if(expr) { \
-				LOGE("[%s-%d]\n", __FUNCTION__, __LINE__);     \
+				LOGE("");     \
 				_media_svc_destroy_content_info(p_str);        \
 				return (val); \
 			} \
+		} while (0)
+
+#define media_svc_sec_debug(fmt, arg...) do { \
+			SECURE_LOGI(" "fmt"", ##arg);	 \
+		} while (0)
+
+#define media_svc_sec_warn(fmt, arg...) do { \
+			SECURE_LOGW(" "fmt"", ##arg); 	\
+		} while (0)
+
+#define media_svct_sec_error(fmt, arg...) do { \
+			SECURE_LOGE(" "fmt"", ##arg);	  \
+		} while (0)
+
+#define ERR_BUF_LENGHT 256
+#define media_svc_stderror(fmt) do { \
+			char buf[ERR_BUF_LENGHT] = {0,}; \
+			strerror_r(errno, buf, ERR_BUF_LENGHT); \
+			LOGE(fmt" : standard error [%s]", buf); \
 		} while (0)
 
 #ifdef _USE_LOG_FILE_
