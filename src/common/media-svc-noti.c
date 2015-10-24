@@ -30,7 +30,7 @@ static __thread int g_noti_from_pid = -1;
 
 static int __media_svc_publish_noti_by_item(media_svc_noti_item *noti_item)
 {
-	int ret = MEDIA_INFO_ERROR_NONE;
+	int ret = MS_MEDIA_ERR_NONE;
 
 	if (noti_item && noti_item->path)
 	{
@@ -38,7 +38,7 @@ static int __media_svc_publish_noti_by_item(media_svc_noti_item *noti_item)
 		if(ret != MS_MEDIA_ERR_NONE)
 		{
 			media_svc_error("media_db_update_send failed : %d [%s]", ret, noti_item->path);
-			ret = MEDIA_INFO_ERROR_SEND_NOTI_FAIL;
+			ret = MS_MEDIA_ERR_SEND_NOTI_FAIL;
 		}
 		else
 		{
@@ -48,7 +48,7 @@ static int __media_svc_publish_noti_by_item(media_svc_noti_item *noti_item)
 	else
 	{
 		media_svc_debug("invalid path");
-		ret = MEDIA_INFO_ERROR_INVALID_PARAMETER;
+		ret = MS_MEDIA_ERR_INVALID_PARAMETER;
 	}
 
 	return ret;
@@ -62,7 +62,7 @@ int _media_svc_publish_noti(media_item_type_e update_item,
 							const char *mime_type
 )
 {
-	int ret = MEDIA_INFO_ERROR_NONE;
+	int ret = MS_MEDIA_ERR_NONE;
 
 	if(STRING_VALID(path))
 	{
@@ -70,7 +70,7 @@ int _media_svc_publish_noti(media_item_type_e update_item,
 		if(ret != MS_MEDIA_ERR_NONE)
 		{
 			media_svc_error("Send noti failed : %d [%s]", ret, path);
-			ret = MEDIA_INFO_ERROR_SEND_NOTI_FAIL;
+			ret = MS_MEDIA_ERR_SEND_NOTI_FAIL;
 		}
 		else
 		{
@@ -80,11 +80,79 @@ int _media_svc_publish_noti(media_item_type_e update_item,
 	else
 	{
 		media_svc_debug("invalid path");
-		ret = MEDIA_INFO_ERROR_INVALID_PARAMETER;
+		ret = MS_MEDIA_ERR_INVALID_PARAMETER;
 	}
 
 	return ret;
 }
+
+int _media_svc_publish_dir_noti(media_item_type_e update_item,
+							media_item_update_type_e update_type,
+							const char *path,
+							media_type_e media_type,
+							const char *uuid,
+							const char *mime_type,
+							int pid
+)
+{
+	int ret = MS_MEDIA_ERR_NONE;
+
+	if(STRING_VALID(path))
+	{
+		ret = media_db_update_send(pid, update_item, update_type, (char *)path, (char *)uuid, media_type, (char *)mime_type);
+		if(ret != MS_MEDIA_ERR_NONE)
+		{
+			media_svc_error("Send noti failed : %d [%s]", ret, path);
+			ret = MS_MEDIA_ERR_SEND_NOTI_FAIL;
+		}
+		else
+		{
+			media_svc_debug("Send noti success [%d][%d]", update_item, update_type);
+		}
+	}
+	else
+	{
+		media_svc_debug("invalid path");
+		ret = MS_MEDIA_ERR_INVALID_PARAMETER;
+	}
+
+	return ret;
+}
+
+
+int _media_svc_publish_dir_noti_v2(media_item_type_e update_item,
+							media_item_update_type_e update_type,
+							const char *path,
+							media_type_e media_type,
+							const char *uuid,
+							const char *mime_type,
+							int pid
+)
+{
+	int ret = MS_MEDIA_ERR_NONE;
+
+	if(STRING_VALID(path))
+	{
+		ret = media_db_update_send_internal(pid, update_item, update_type, (char *)path, (char *)uuid, media_type, (char *)mime_type);
+		if(ret != MS_MEDIA_ERR_NONE)
+		{
+			media_svc_error("Send noti failed : %d [%s]", ret, path);
+			ret = MS_MEDIA_ERR_SEND_NOTI_FAIL;
+		}
+		else
+		{
+			media_svc_debug("Send noti success [%d][%d]", update_item, update_type);
+		}
+	}
+	else
+	{
+		media_svc_debug("invalid path");
+		ret = MS_MEDIA_ERR_INVALID_PARAMETER;
+	}
+
+	return ret;
+}
+
 
 void _media_svc_set_noti_from_pid(int pid)
 {
@@ -98,10 +166,10 @@ int _media_svc_create_noti_list(int count)
 	g_inserted_noti_list = calloc(count, sizeof(media_svc_noti_item));
 	if (g_inserted_noti_list == NULL) {
 		media_svc_error("Failed to prepare noti items");
-		return MEDIA_INFO_ERROR_OUT_OF_MEMORY;
+		return MS_MEDIA_ERR_OUT_OF_MEMORY;
 	}
 
-	return MEDIA_INFO_ERROR_NONE;
+	return MS_MEDIA_ERR_NONE;
 }
 
 int _media_svc_insert_item_to_noti_list(media_svc_content_info_s *content_info, int cnt)
@@ -121,7 +189,7 @@ int _media_svc_insert_item_to_noti_list(media_svc_content_info_s *content_info, 
 			noti_list[cnt].mime_type = strdup(content_info->mime_type);
 	}
 
-	return MEDIA_INFO_ERROR_NONE;
+	return MS_MEDIA_ERR_NONE;
 }
 
 int _media_svc_destroy_noti_list(int all_cnt)
@@ -140,12 +208,12 @@ int _media_svc_destroy_noti_list(int all_cnt)
 		g_inserted_noti_list = NULL;
 	}
 
-	return MEDIA_INFO_ERROR_NONE;
+	return MS_MEDIA_ERR_NONE;
 }
 
 int _media_svc_publish_noti_list(int all_cnt)
 {
-	int ret = MEDIA_INFO_ERROR_NONE;
+	int ret = MS_MEDIA_ERR_NONE;
 	int idx = 0;
 	media_svc_noti_item *noti_list = g_inserted_noti_list;
 
@@ -168,5 +236,5 @@ int _media_svc_destroy_noti_item(media_svc_noti_item *item)
 		SAFE_FREE(item);
 	}
 
-	return MEDIA_INFO_ERROR_NONE;
+	return MS_MEDIA_ERR_NONE;
 }

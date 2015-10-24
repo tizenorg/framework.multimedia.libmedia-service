@@ -1,9 +1,9 @@
 Name:       libmedia-service
 Summary:    Media information service library for multimedia applications.
-Version: 0.2.122
+Version: 0.2.148
 Release:    1
 Group:      System/Libraries
-License:    Apache-2.0 and public domain
+License:    Apache-2.0 and PD
 Source0:    %{name}-%{version}.tar.gz
 
 Requires(post): /sbin/ldconfig
@@ -23,6 +23,7 @@ BuildRequires:  pkgconfig(libmedia-utils)
 BuildRequires:  pkgconfig(uuid)
 BuildRequires:  pkgconfig(icu-i18n)
 BuildRequires:  pkgconfig(vconf)
+BuildRequires:  pkgconfig(iniparser)
 
 %description
 Media information service library for multimedia applications.
@@ -39,6 +40,9 @@ Media information service library for multimedia applications. (development file
 %setup -q 
 
 %build
+export CFLAGS+=" -Wextra -Wno-array-bounds"
+export CFLAGS+=" -Wno-ignored-qualifiers -Wno-unused-parameter -Wshadow"
+export CFLAGS+=" -Wwrite-strings -Wswitch-default"
 
 %if 0%{?sec_build_binary_debug_enable}
 export CFLAGS="$CFLAGS -DTIZEN_DEBUG_ENABLE"

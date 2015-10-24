@@ -15,6 +15,7 @@ SET(SRCS
 	src/common/media-svc-util.c
 	src/common/media-svc-debug.c
 	src/common/media-svc-noti.c
+	src/common/media-svc-storage.c
 	src/common/media-svc-localize-utils.c
 	src/common/media-svc-localize_ch.c
 	src/common/media-svc-localize_tw.c
@@ -47,14 +48,14 @@ IF("${CMAKE_BUILD_TYPE}" STREQUAL "")
 ENDIF("${CMAKE_BUILD_TYPE}" STREQUAL "")
 MESSAGE("Build type: ${CMAKE_BUILD_TYPE}")
 
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/include/common ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/uuid ${CMAKE_SOURCE_DIR}/md5)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/include/common ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/md5)
 
 FIND_PROGRAM(UNAME NAMES uname)
 EXEC_PROGRAM("${UNAME}" ARGS "-m" OUTPUT_VARIABLE "ARCH")
 
 
 INCLUDE(FindPkgConfig)
-pkg_check_modules(pkgs REQUIRED glib-2.0 dlog sqlite3 db-util libexif mm-common mm-fileinfo media-thumbnail libmedia-utils aul uuid vconf)
+pkg_check_modules(pkgs REQUIRED glib-2.0 dlog sqlite3 db-util libexif mm-common mm-fileinfo media-thumbnail libmedia-utils aul uuid vconf iniparser)
 
 FOREACH(flag ${pkgs_CFLAGS})
 	SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} ${flag}")
@@ -64,8 +65,6 @@ SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS} -fPIC")
 SET(CMAKE_C_FLAGS_DEBUG "-O0 -g")
 SET(CMAKE_C_FLAGS_RELEASE "-O2 -fPIC")
 
-#FIND_PROGRAM(UNAME NAMES uname)
-#EXEC_PROGRAM("${UNAME}" ARGS "-m" OUTPUT_VARIABLE "ARCH")
 IF("${ARCH}" STREQUAL "armv7l")
 	ADD_DEFINITIONS("-DTARGET")
 	MESSAGE("add -DTARGET")
@@ -81,7 +80,7 @@ SET(CMAKE_EXE_LINKER_FLAGS "-Wl,--as-needed -Wl,--hash-style=both")
 CONFIGURE_FILE(libmedia-service.pc.in libmedia-service.pc @ONLY)
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/libmedia-service.pc DESTINATION lib/pkgconfig)
 
-ADD_SUBDIRECTORY(test)
+#ADD_SUBDIRECTORY(test)
 
 LINK_DIRECTORIES(lib)
 
@@ -102,5 +101,4 @@ INSTALL(TARGETS ${MEDIASERVICE-HASH-LIB} LIBRARY DESTINATION lib)
 INSTALL(TARGETS ${MEDIACONTENT-PLUGIN-LIB} LIBRARY DESTINATION lib)
 
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/media-svc.h DESTINATION include/media-service/)
-INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/media-svc-error.h DESTINATION include/media-service/)
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/media-svc-types.h DESTINATION include/media-service/)

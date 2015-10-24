@@ -26,7 +26,7 @@
 
 #include <vconf.h>
 
-#include "media-svc-error.h"
+#include "media-util-err.h"
 #include "media-svc-debug.h"
 #include "media-svc-localize-utils.h"
 
@@ -47,19 +47,19 @@ int _media_svc_check_utf8(char c)
 	else if ((c & (char)0xfe) == (char)0xfc)
 		return 6;
 	else
-		return MEDIA_INFO_ERROR_INVALID_PARAMETER;
+		return MS_MEDIA_ERR_INVALID_PARAMETER;
 }
 
 int SAFE_SNPRINTF(char **buf, int *buf_size, int len, const char *src)
 {
-	int remain;
-	int temp_len;
+	int remain = 0;
+	int temp_len = 0;
 
 	if (len < 0)
 		return -1;
 
 	remain = *buf_size - len;
-	if (remain > strlen(src) + 1) {
+	if (remain > (int)strlen(src) + 1) {
 		temp_len = snprintf((*buf)+len, remain, "%s", src);
 		return temp_len;
 	}
@@ -72,7 +72,7 @@ int SAFE_SNPRINTF(char **buf, int *buf_size, int len, const char *src)
 			*buf = temp;
 			*buf_size = *buf_size * 2;
 			remain = *buf_size - len;
-			if (remain > strlen(src) + 1)
+			if (remain > (int)strlen(src) + 1)
 				break;
 		}
 		temp_len = snprintf((*buf)+len, remain, "%s", src);
@@ -102,7 +102,7 @@ static int __media_svc_remove_special_char(const char *src, char *dest, int dest
 		else {
 			media_svc_error("The parameter(src:%s) has invalid character set", src);
 			dest[d_pos] = '\0';
-			return MEDIA_INFO_ERROR_INVALID_PARAMETER;
+			return MS_MEDIA_ERR_INVALID_PARAMETER;
 		}
 	}
 
@@ -118,6 +118,7 @@ static inline int __media_svc_collation_str(const char *src, char **dest)
 	UCollator *collator;
 	char region[50] = {0};
 	char *lang = NULL;
+	const char *en_us = "en_US.UTF-8";
 
 	lang = vconf_get_str(VCONFKEY_LANGSET);
 	if(lang != NULL) {
@@ -129,7 +130,7 @@ static inline int __media_svc_collation_str(const char *src, char **dest)
 			free(lang);
 		}
 	} else {
-		strncpy(region, "en_US.UTF-8", strlen("en_US.UTF-8"));
+		strncpy(region, en_us, strlen(en_us));
 	}
 
 	char *dot = strchr(region, '.');
@@ -138,14 +139,14 @@ static inline int __media_svc_collation_str(const char *src, char **dest)
 
 	collator = ucol_open(region, &status);
 
-	media_svc_retvm_if(U_FAILURE(status), MEDIA_INFO_ERROR_INTERNAL,
+	media_svc_retvm_if(U_FAILURE(status), MS_MEDIA_ERR_INTERNAL,
 			"ucol_open() Failed(%s)", u_errorName(status));
 
 	u_strFromUTF8(NULL, 0, &size, src, strlen(src), &status);
 	if (U_FAILURE(status) && status != U_BUFFER_OVERFLOW_ERROR) {
 		media_svc_error("u_strFromUTF8 to get the dest length Failed(%s)", u_errorName(status));
 		ucol_close(collator);
-		return MEDIA_INFO_ERROR_INTERNAL;
+		return MS_MEDIA_ERR_INTERNAL;
 	}
 	status = U_ZERO_ERROR;
 	tmp_result = calloc(1, sizeof(UChar) * (size + 1));
@@ -154,7 +155,7 @@ static inline int __media_svc_collation_str(const char *src, char **dest)
 		media_svc_error("u_strFromUTF8 Failed(%s)", u_errorName(status));
 		free(tmp_result);
 		ucol_close(collator);
-		return MEDIA_INFO_ERROR_INTERNAL;
+		return MS_MEDIA_ERR_INTERNAL;
 	}
 
 	size = ucol_getSortKey(collator, tmp_result, -1, NULL, 0);
@@ -163,7 +164,7 @@ static inline int __media_svc_collation_str(const char *src, char **dest)
 
 	ucol_close(collator);
 	free(tmp_result);
-	return MEDIA_INFO_ERROR_NONE;
+	return MS_MEDIA_ERR_NONE;
 }
 
 int _media_svc_collation_str(const char *src, char **dest)
@@ -172,7 +173,7 @@ int _media_svc_collation_str(const char *src, char **dest)
 	char temp[SAFE_STRLEN(src) + 1];
 
 	ret = __media_svc_remove_special_char(src, temp, sizeof(temp));
-	media_svc_retvm_if(ret < MEDIA_INFO_ERROR_NONE, ret, "__ctsvc_remove_special_char() Failed(%d)", ret);
+	media_svc_retvm_if(ret < MS_MEDIA_ERR_NONE, ret, "__ctsvc_remove_special_char() Failed(%d)", ret);
 
 	return __media_svc_collation_str(temp, dest);
 }

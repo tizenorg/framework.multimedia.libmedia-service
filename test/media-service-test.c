@@ -24,6 +24,7 @@
 #include <media-svc.h>
 #include <media-svc-noti.h>
 
+#define STORAGE_ID_SIZE 36  // MEDIA_CONTENT_UUID_SIZE
 #define SAFE_FREE(src)      		{ if(src) {free(src); src = NULL;}}
 
 GMainLoop *g_loop = NULL;
@@ -54,22 +55,22 @@ void _noti_cb(int pid,
 		media_svc_debug("Noti type : MS_MEDIA_ITEM_UPDATE");
 	}
 
-	//media_svc_debug("content type : %d", content_type);
-	printf("content type : %d\n", content_type);
+	media_svc_debug("content type : %d\n", content_type);
 
 	if (path)
-		printf("path : %s\n", path);
+		media_svc_debug("path : %s\n", path);
 	else
-		printf("path not");
+		media_svc_debug("path not");
 
 	if (mime_type)
-		printf("mime_type : %s", mime_type);
+		media_svc_debug("mime_type : %s", mime_type);
 	else
-		printf("mime not");
+		media_svc_debug("mime not");
 
-    if (user_data) printf("String : %s\n", (char *)user_data);
+    if (user_data)
+		media_svc_debug("String : %s\n", (char *)user_data);
 	else
-		printf("user not");
+		media_svc_debug("user not");
 
     return;
 }
@@ -77,7 +78,7 @@ void _noti_cb(int pid,
 #if 1
 gboolean _send_noti_batch_operations(gpointer data)
 {
-    int ret = MEDIA_INFO_ERROR_NONE;
+    int ret = MS_MEDIA_ERR_NONE;
 
     /* First of all, noti subscription */
     char *user_str = strdup("hi");
@@ -85,11 +86,19 @@ gboolean _send_noti_batch_operations(gpointer data)
 
     /* 1. media_svc_insert_item_immediately */
     char *path = "/opt/usr/media/test/image1.jpg";
+	char storage_id[STORAGE_ID_SIZE+1] = {0,};
+
+	ret = media_svc_get_storage_id(g_db_handle, path, storage_id);
+	if (ret != MS_MEDIA_ERR_NONE) {
+		media_svc_error("media_svc_get_storage_id failed : %d (%s)", ret, path);
+		SAFE_FREE(user_str);
+        return FALSE;
+	}
 
 	media_svc_storage_type_e storage_type;
 
 	ret = media_svc_get_storage_type(path, &storage_type);
-	if (ret != MEDIA_INFO_ERROR_NONE) {
+	if (ret != MS_MEDIA_ERR_NONE) {
 		media_svc_error("media_svc_get_storage_type failed : %d (%s)", ret, path);
 		SAFE_FREE(user_str);
         return FALSE;
@@ -105,7 +114,7 @@ gboolean _send_noti_batch_operations(gpointer data)
 		snprintf(filepath, sizeof(filepath), "%s%d.jpg", "/opt/usr/media/test/image", idx+1);
 		media_svc_debug("File : %s\n", filepath);
 		file_list[idx] = strdup(filepath);
-		ret = media_svc_insert_item_bulk(g_db_handle, storage_type, file_list[idx], FALSE);
+		ret = media_svc_insert_item_bulk(g_db_handle, storage_id, storage_type, file_list[idx], FALSE);
 		if (ret != 0) {
 			media_svc_error("media_svc_insert_item_bulk[%d] failed", idx);
 		} else {
@@ -122,7 +131,7 @@ gboolean _send_noti_batch_operations(gpointer data)
 
 gboolean _send_noti_operations(gpointer data)
 {
-	int ret = MEDIA_INFO_ERROR_NONE;
+	int ret = MS_MEDIA_ERR_NONE;
 
 	/* First of all, noti subscription */
 	char *user_str = strdup("hi");
@@ -130,17 +139,26 @@ gboolean _send_noti_operations(gpointer data)
 
 	/* 1. media_svc_insert_item_immediately */
 	char *path = "/opt/usr/media/test/image1.jpg";
+	char storage_id[STORAGE_ID_SIZE+1] = {0,};
+
+	ret = media_svc_get_storage_id(g_db_handle, path, storage_id);
+	if (ret != MS_MEDIA_ERR_NONE) {
+		media_svc_error("media_svc_get_storage_id failed : %d (%s)", ret, path);
+		SAFE_FREE(user_str);
+        return FALSE;
+	}
+
 	media_svc_storage_type_e storage_type;
 
 	ret = media_svc_get_storage_type(path, &storage_type);
-	if (ret != MEDIA_INFO_ERROR_NONE) {
+	if (ret != MS_MEDIA_ERR_NONE) {
 		media_svc_error("media_svc_get_storage_type failed : %d (%s)", ret, path);
 		SAFE_FREE(user_str);
 		return FALSE;
 	}
 
-	ret = media_svc_insert_item_immediately(g_db_handle, storage_type, path);
-	if (ret != MEDIA_INFO_ERROR_NONE) {
+	ret = media_svc_insert_item_immediately(g_db_handle, storage_id, storage_type, path);
+	if (ret != MS_MEDIA_ERR_NONE) {
 		media_svc_error("media_svc_insert_item_immediately failed : %d", ret);
 		SAFE_FREE(user_str);
 		return FALSE;
@@ -149,8 +167,8 @@ gboolean _send_noti_operations(gpointer data)
 	media_svc_debug("media_svc_insert_item_immediately success");
 
 	/* 2. media_svc_refresh_item */
-	ret = media_svc_refresh_item(g_db_handle, storage_type, path);
-	if (ret != MEDIA_INFO_ERROR_NONE) {
+	ret = media_svc_refresh_item(g_db_handle, storage_id, storage_type, path);
+	if (ret != MS_MEDIA_ERR_NONE) {
 		media_svc_error("media_svc_refresh_item failed : %d", ret);
 		return FALSE;
 	}
@@ -158,23 +176,23 @@ gboolean _send_noti_operations(gpointer data)
 
 	/* 2. media_svc_move_item */
 	const char *dst_path = "/opt/usr/media/test/image11.jpg";
-	ret = media_svc_move_item(g_db_handle, storage_type, path, storage_type, dst_path);
-	if (ret != MEDIA_INFO_ERROR_NONE) {
+	ret = media_svc_move_item(g_db_handle, storage_id, storage_type, path, storage_type, dst_path);
+	if (ret != MS_MEDIA_ERR_NONE) {
 		media_svc_error("media_svc_move_item failed : %d", ret);
 		return FALSE;
 	}
 	media_svc_debug("media_svc_move_item success");
 
-	ret = media_svc_move_item(g_db_handle, storage_type, dst_path, storage_type, path);
-	if (ret != MEDIA_INFO_ERROR_NONE) {
+	ret = media_svc_move_item(g_db_handle, storage_id, storage_type, dst_path, storage_type, path);
+	if (ret != MS_MEDIA_ERR_NONE) {
 		media_svc_error("media_svc_move_item failed : %d", ret);
 		return FALSE;
 	}
 	media_svc_debug("media_svc_move_item success");
 
 	/* 4. media_svc_delete_item_by_path */
-	ret = media_svc_delete_item_by_path(g_db_handle, path);
-	if (ret != MEDIA_INFO_ERROR_NONE) {
+	ret = media_svc_delete_item_by_path(g_db_handle, "media", path);
+	if (ret != MS_MEDIA_ERR_NONE) {
 		media_svc_error("media_svc_delete_item_by_path failed : %d", ret);
 		return FALSE;
 	}
@@ -183,16 +201,16 @@ gboolean _send_noti_operations(gpointer data)
 	/* Rename folder */
 	const char *src_folder_path = "/opt/usr/media/test";
 	const char *dst_folder_path = "/opt/usr/media/test_test";
-	ret = media_svc_rename_folder(g_db_handle, src_folder_path, dst_folder_path);
-	if (ret != MEDIA_INFO_ERROR_NONE) {
+	ret = media_svc_rename_folder(g_db_handle, "media", src_folder_path, dst_folder_path);
+	if (ret != MS_MEDIA_ERR_NONE) {
 		media_svc_error("media_svc_rename_folder failed : %d", ret);
 		return FALSE;
 	}
 	media_svc_debug("media_svc_rename_folder success");
 
 	/* Rename folder again */
-	ret = media_svc_rename_folder(g_db_handle, dst_folder_path, src_folder_path);
-	if (ret != MEDIA_INFO_ERROR_NONE) {
+	ret = media_svc_rename_folder(g_db_handle, "media", dst_folder_path, src_folder_path);
+	if (ret != MS_MEDIA_ERR_NONE) {
 		media_svc_error("media_svc_rename_folder failed : %d", ret);
 		return FALSE;
 	}
@@ -221,21 +239,21 @@ int test_noti()
 	g_main_loop_unref(g_loop);
     media_db_update_unsubscribe();
 
-	return MEDIA_INFO_ERROR_NONE;
+	return MS_MEDIA_ERR_NONE;
 }
 
 int main()
 {
-	int ret = MEDIA_INFO_ERROR_NONE;
+	int ret = MS_MEDIA_ERR_NONE;
 	ret = media_svc_connect(&g_db_handle);
-	if (ret != MEDIA_INFO_ERROR_NONE) {
+	if (ret != MS_MEDIA_ERR_NONE) {
 		media_svc_error("media_svc_connect failed : %d", ret);
 	} else {
 		media_svc_debug("media_svc_connect success");
 	}
 
 	ret = test_noti();
-	if (ret < MEDIA_INFO_ERROR_NONE) {
+	if (ret < MS_MEDIA_ERR_NONE) {
 		media_svc_error("test_noti failed : %d", ret);
 	} else {
 		media_svc_debug("test_noti success");

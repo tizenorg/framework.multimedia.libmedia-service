@@ -35,21 +35,88 @@ extern "C" {
  * DB information
  */
 
-#define MEDIA_SVC_DB_NAME 						MEDIA_DB_NAME		/**<  media db name*/
-#define LATEST_VERSION_NUMBER					3
+#define LATEST_VERSION_NUMBER					4
+
+/**
+ * Notice : New table user version -1 : alter table issue
+ */
+#define USER_V1									1
+#define USER_V2									2
+#define USER_V3									3
+#define USER_V4									4
 
 /**
  * DB table information
  */
 
-#define MEDIA_SVC_DB_TABLE_MEDIA					"media"				/**<  media table*/
-#define MEDIA_SVC_DB_TABLE_FOLDER					"folder"				/**<  media_folder table*/
-#define MEDIA_SVC_DB_TABLE_PLAYLIST				"playlist"				/**<  playlist table*/
-#define MEDIA_SVC_DB_TABLE_PLAYLIST_MAP			"playlist_map"			/**<  playlist_map table*/
-#define MEDIA_SVC_DB_TABLE_ALBUM					"album"				/**<  album table*/
+/**
+ * Table Name
+ */
+#define MEDIA_SVC_DB_TABLE_MEDIA				"media"				/**<  media table*/
+#define MEDIA_SVC_DB_TABLE_FOLDER				"folder"			/**<  media_folder table*/
+#define MEDIA_SVC_DB_TABLE_PLAYLIST				"playlist"			/**<  playlist table*/
+#define MEDIA_SVC_DB_TABLE_PLAYLIST_MAP			"playlist_map"		/**<  playlist_map table*/
+#define MEDIA_SVC_DB_TABLE_ALBUM				"album"				/**<  album table*/
 #define MEDIA_SVC_DB_TABLE_TAG					"tag"				/**<  tag table*/
 #define MEDIA_SVC_DB_TABLE_TAG_MAP				"tag_map"			/**<  tag_map table*/
 #define MEDIA_SVC_DB_TABLE_BOOKMARK				"bookmark"			/**<  bookmark table*/
+#define MEDIA_SVC_DB_TABLE_STORAGE				"storage"			/**<  storage table*/
+#define MEDIA_SVC_DB_TABLE_TMP_TABLE				"tmp"			/**<  tmp table for backup*/
+
+/**
+ * View Name
+ */
+#define MEDIA_SVC_DB_VIEW_MEDIA					"media_view"		/**<  media_view*/
+#define MEDIA_SVC_DB_VIEW_PLAYLIST				"playlist_view"		/**<  playlist_view*/
+#define MEDIA_SVC_DB_VIEW_TAG					"tag_view"		/**<  tag_view*/
+
+/**
+ * Trigger Name
+ */
+#define MEDIA_SVC_DB_TRIGGER_FOLDER				"folder_cleanup"
+#define MEDIA_SVC_DB_TRIGGER_PLAYLIST_MAP			"playlist_map_cleanup"		/**<  media to map*/
+#define MEDIA_SVC_DB_TRIGGER_PLAYLIST_MAP1			"playlist_map_cleanup_1"	/**<  playlist to map*/
+#define MEDIA_SVC_DB_TRIGGER_ALBUM				"album_cleanup"
+#define MEDIA_SVC_DB_TRIGGER_TAG_MAP			"tag_map_cleanup"		/**<  media to map*/
+#define MEDIA_SVC_DB_TRIGGER_TAG_MAP1			"tag_map_cleanup_1"		/**<  tag to map*/
+#define MEDIA_SVC_DB_TRIGGER_BOOKMARK			"bookmark_cleanup"
+#define MEDIA_SVC_DB_TRIGGER_STORAGE			"storage_folder_cleanup"
+
+/**
+ * Trigger Name
+ */
+#define MEDIA_SVC_DB_COLUMN_THUMBNAIL			"thumbnail_path"
+#define MEDIA_SVC_DB_COLUMN_MAP_ID				"_id"
+
+
+/**
+ * option
+ */
+#define MEDIA_SVC_DB_TYPE_TEXT					"TEXT"
+#define MEDIA_SVC_DB_TYPE_INT					"INTEGER"
+#define MEDIA_SVC_DB_TYPE_DOUBLE				"DOUBLE"
+
+/**
+ * Query form
+ */
+#define MEDIA_SVC_DB_QUERY_TABLE_WITH_UNIQUE	"CREATE TABLE IF NOT EXISTS '%s' (%s, unique(%s));"
+#define MEDIA_SVC_DB_QUERY_TABLE				"CREATE TABLE IF NOT EXISTS '%s' (%s);"
+#define MEDIA_SVC_DB_QUERY_INDEX				"CREATE INDEX IF NOT EXISTS %s on '%s' (%s);"
+#define MEDIA_SVC_DB_QUERY_TRIGGER				"CREATE TRIGGER IF NOT EXISTS '%s' DELETE ON '%s' BEGIN DELETE FROM %s WHERE %s=old.%s;END;"
+#define MEDIA_SVC_DB_QUERY_TRIGGER_WITH_COUNT	"CREATE TRIGGER IF NOT EXISTS '%s' DELETE ON '%s' BEGIN DELETE FROM %s WHERE (SELECT count(*) FROM '%s' WHERE %s=old.%s)=1 AND %s=old.%s;END;"
+#define MEDIA_SVC_DB_QUERY_VIEW_MEDIA			"CREATE VIEW IF NOT EXISTS %s AS SELECT * from %s;"
+#define MEDIA_SVC_DB_QUERY_VIEW_PLAYLIST		"CREATE VIEW IF NOT EXISTS %s AS SELECT %s FROM playlist \
+												LEFT OUTER JOIN playlist_map ON playlist.playlist_id = playlist_map.playlist_id \
+												LEFT OUTER JOIN media ON (playlist_map.media_uuid = media.media_uuid AND media.validity=1) \
+												LEFT OUTER JOIN (SELECT count(playlist_id) as media_count, playlist_id FROM playlist_map group by playlist_id) as cnt_tbl ON (cnt_tbl.playlist_id=playlist_map.playlist_id AND media.validity=1);"
+#define MEDIA_SVC_DB_QUERY_VIEW_TAG				"CREATE VIEW IF NOT EXISTS %s AS SELECT %s FROM tag \
+												LEFT OUTER JOIN tag_map ON tag.tag_id=tag_map.tag_id \
+												LEFT OUTER JOIN media ON (tag_map.media_uuid = media.media_uuid AND media.validity=1) \
+												LEFT OUTER JOIN (SELECT count(tag_id) as media_count, tag_id FROM tag_map group by tag_id) as cnt_tbl ON (cnt_tbl.tag_id=tag_map.tag_id AND media.validity=1);"
+#define MEDIA_SVC_DB_QUERY_ALTER_TABLE			"ALTER TABLE %s ADD COLUMN %s;"
+#define MEDIA_SVC_DB_QUERY_DROP_VIEW			"DROP VIEW IF EXISTS %s;"
+
+
 
 #define MEDIA_SVC_METADATA_LEN_MAX			128						/**<  Length of metadata*/
 #define MEDIA_SVC_METADATA_DESCRIPTION_MAX	512						/**<  Length of description*/
@@ -57,7 +124,7 @@ extern "C" {
 #define MEDIA_SVC_UUID_SIZE		    				36 						/**< Length of UUID*/
 
 #define MEDIA_SVC_TAG_UNKNOWN				"Unknown"
-#define MEDIA_SVC_MEDIA_PATH				MEDIA_THUMB_ROOT_PATH			/**<  Media path*/
+#define MEDIA_SVC_MEDIA_PATH					MEDIA_THUMB_ROOT_PATH				/**<  Media path*/
 #define MEDIA_SVC_THUMB_PATH_PREFIX			MEDIA_SVC_MEDIA_PATH"/.thumb"			/**< Thumbnail path prefix*/
 #define MEDIA_SVC_THUMB_INTERNAL_PATH 		MEDIA_SVC_THUMB_PATH_PREFIX"/phone"	/**<  Phone thumbnail path*/
 #define MEDIA_SVC_THUMB_EXTERNAL_PATH 		MEDIA_SVC_THUMB_PATH_PREFIX"/mmc"		/**<  MMC thumbnail path*/
@@ -78,81 +145,47 @@ enum Exif_Orientation {
     ROT_270 =8
 };
 
-/**
- * Media meta data information
- */
-typedef struct {
-	char	*	title;				/**< track title*/
-	char	*	album;				/**< album name*/
-	char	*	artist;				/**< artist name*/
-	char	*	album_artist;		/**< artist name*/
-	char	*	genre;				/**< genre of track*/
-	char	*	composer;			/**< composer name*/
-	char	*	year;				/**< year*/
-	char	*	recorded_date;		/**< recorded date*/
-	char	*	copyright;			/**< copyright*/
-	char	*	track_num;			/**< track number*/
-	char	*	description;			/**< description*/
-	int		bitrate;				/**< bitrate*/
-	int		samplerate;			/**< samplerate*/
-	int		channel;				/**< channel*/
-	int		duration;			/**< duration*/
-	float		longitude;			/**< longitude*/
-	float		latitude;				/**< latitude*/
-	float		altitude;				/**< altitude*/
-	int 		width;				/**< width*/
-	int 		height;				/**< height*/
-	char	*	datetaken;			/**< datetaken*/
-	int		orientation;			/**< orientation*/
-	int		rating;				/**< user defined rating */
-	char	*	weather;				/**< weather of image */
-	int		bitpersample;				/**< bitrate*/
-
-	char	*	file_name_pinyin;				/**< pinyin for file_name*/
-	char	*	title_pinyin;					/**< pinyin for title*/
-	char	*	album_pinyin;				/**< pinyin for album*/
-	char	*	artist_pinyin;					/**< pinyin for artist*/
-	char	*	album_artist_pinyin;			/**< pinyin for album_artist*/
-	char	*	genre_pinyin;					/**< pinyin for genre*/
-	char	*	composer_pinyin;				/**< pinyin for composer*/
-	char	*	copyright_pinyin;				/**< pinyin for copyright*/
-	char	*	description_pinyin;			/**< pinyin for description*/
-} media_svc_content_meta_s;
-
-
-/**
- * Media data information
- */
-typedef struct {
-	char	*	media_uuid;					/**< Unique ID of item */
-	char	*	path;						/**< Full path of media file */
-	char	*	file_name;					/**< File name of media file. Display name */
-	char	*	file_name_pinyin;				/**< File name pinyin of media file. Display name */
-	int		media_type;					/**< Type of media file : internal/external */
-	char	*	mime_type;					/**< Full path and file name of media file */
-	unsigned long long	size;							/**< size */
-	time_t	added_time;					/**< added time, time_t */
-	time_t	modified_time;				/**< modified time, time_t */
-	time_t	timeline;					/**< timeline of media, time_t */
-	char	*	folder_uuid;					/**< Unique ID of folder */
-	int		album_id;					/**< Unique ID of album */
-	char	*	thumbnail_path;				/**< Thumbnail image file path */
-	int		played_count;				/**< played count */
-	int		last_played_time;				/**< last played time */
-	int		last_played_position;			/**< last played position */
-	int		favourate;					/**< favourate. o or 1 */
-	int		is_drm;						/**< is_drm. o or 1 */
-	int		sync_status;						/**< sync_status  */
-	int		storage_type;					/**< Storage of media file : internal/external */
-	media_svc_content_meta_s	media_meta;	/**< meta data structure for audio files */
-} media_svc_content_info_s;
-
 typedef enum{
 	MEDIA_SVC_QUERY_INSERT_ITEM,
 	MEDIA_SVC_QUERY_SET_ITEM_VALIDITY,
 	MEDIA_SVC_QUERY_MOVE_ITEM,
-	MEDIA_SVC_QUERY_UPDATE_ITEM
+	MEDIA_SVC_QUERY_UPDATE_ITEM,
+	MEDIA_SVC_QUERY_INSERT_FOLDER
 } media_svc_query_type_e;
+
+typedef enum{
+	MEDIA_SVC_DB_LIST_MEDIA 		= 0,
+	MEDIA_SVC_DB_LIST_FOLDER,
+	MEDIA_SVC_DB_LIST_PLAYLIST_MAP,
+	MEDIA_SVC_DB_LIST_PLAYLIST,
+	MEDIA_SVC_DB_LIST_ALBUM,
+	MEDIA_SVC_DB_LIST_TAG_MAP,
+	MEDIA_SVC_DB_LIST_TAG,
+	MEDIA_SVC_DB_LIST_BOOKMARK,
+	MEDIA_SVC_DB_LIST_STORAGE,
+	MEDIA_SVC_DB_LIST_MAX,
+} media_svc_table_slist_e;
+
+typedef struct table_inform {
+	char *triggerName;
+	char *viewName;
+	char *eventTable;
+	char *actionTable;
+}table_info;
+
+typedef struct column_inform {
+	char *name;
+	char *type;
+	bool hasOption;
+	char *option;
+	int version;
+	bool isIndex;
+	char *indexName;
+	bool isUnique;
+	bool isTrigger;
+	bool isView;
+}column_info;
+
 
 #ifdef __cplusplus
 }

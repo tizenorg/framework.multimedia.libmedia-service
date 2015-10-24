@@ -23,7 +23,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "media-svc-error.h"
+#include "media-util-err.h"
 #include "media-svc-types.h"
 #include "media-svc-debug.h"
 #include "media-svc-localize_ch.h"
@@ -2138,7 +2138,7 @@ static inline int __media_svc_get_pinyinspell(UChar src, char spell[CHINESE_DUOY
 	int count=0;
 
 	offset = src - CHINESE_UNICODE_START;
-	media_svc_retvm_if(offset < 0 || offset >= CHINESE_COUNT , MEDIA_INFO_ERROR_INVALID_PARAMETER, "src is invalid");
+	media_svc_retvm_if(offset < 0 || offset >= CHINESE_COUNT , MS_MEDIA_ERR_INVALID_PARAMETER, "src is invalid");
 
 	len = strlen(pinyin_spell_table[offset]);
 
@@ -2208,13 +2208,13 @@ int _media_svc_convert_chinese_to_pinyin(const char *src, pinyin_name_s **name, 
 
 	*size = 0;
 
-	media_svc_retvm_if(src==NULL, MEDIA_INFO_ERROR_INVALID_PARAMETER, "src is NULL");
-	media_svc_retvm_if(!*src, MEDIA_INFO_ERROR_INVALID_PARAMETER, "*src is NULL");
+	media_svc_retvm_if(src==NULL, MS_MEDIA_ERR_INVALID_PARAMETER, "src is NULL");
+	media_svc_retvm_if(!*src, MS_MEDIA_ERR_INVALID_PARAMETER, "*src is NULL");
 
 	u_strFromUTF8(temp_result, array_sizeof(temp_result), NULL, src, -1, &status);
 	if (U_FAILURE(status)){
 		media_svc_error("u_strFromUTF8 Failed(%s)", u_errorName(status));
-		return MEDIA_INFO_ERROR_INTERNAL;
+		return MS_MEDIA_ERR_INTERNAL;
 	}
 
 	len = u_strlen(temp_result);
@@ -2232,7 +2232,7 @@ int _media_svc_convert_chinese_to_pinyin(const char *src, pinyin_name_s **name, 
 
 		if (__media_svc_is_chinese(&temp_result[count])) {
 			ret = __media_svc_get_pinyinspell(temp_result[count], spell[count]);
-			media_svc_retvm_if(ret < MEDIA_INFO_ERROR_NONE, MEDIA_INFO_ERROR_INTERNAL, "__media_svc_get_pinyinspell() Failed(%d)", ret);
+			media_svc_retvm_if(ret < MS_MEDIA_ERR_NONE, MS_MEDIA_ERR_INTERNAL, "__media_svc_get_pinyinspell() Failed(%d)", ret);
 			if (multi_pinyin_count >= MEDIA_SVC_CHINESE_MULTIPLE_PINYIN_MAX_LEN)
 				ret = 1;
 
@@ -2252,7 +2252,7 @@ int _media_svc_convert_chinese_to_pinyin(const char *src, pinyin_name_s **name, 
 			temp[0] = temp_result[count];
 			temp[1] = 0x00;
 			u_strToUTF8(spell[count][0], 10, &temp_size, temp, -1, &status);
-			media_svc_retvm_if(U_FAILURE(status), MEDIA_INFO_ERROR_INTERNAL, "u_strToUTF8() Failed(%s)", u_errorName(status));
+			media_svc_retvm_if(U_FAILURE(status), MS_MEDIA_ERR_INTERNAL, "u_strToUTF8() Failed(%s)", u_errorName(status));
 			spell[count][0][temp_size]='\0';
 			pinyin_spell_count[count] = 1;
 		}
@@ -2260,7 +2260,7 @@ int _media_svc_convert_chinese_to_pinyin(const char *src, pinyin_name_s **name, 
 
 	*size = total_count;
 	temp_name = calloc(total_count, sizeof(pinyin_name_s));
-	media_svc_retvm_if(temp_name == NULL, MEDIA_INFO_ERROR_OUT_OF_MEMORY,"calloc Failed()");
+	media_svc_retvm_if(temp_name == NULL, MS_MEDIA_ERR_OUT_OF_MEMORY,"calloc Failed()");
 
 	int repeat = 1;
 	int name_len[total_count];
@@ -2312,7 +2312,7 @@ int _media_svc_convert_chinese_to_pinyin(const char *src, pinyin_name_s **name, 
 
 	*name = temp_name;
 
-	return MEDIA_INFO_ERROR_NONE;
+	return MS_MEDIA_ERR_NONE;
 }
 
 void _media_svc_pinyin_free(pinyin_name_s *pinyinname, int size)

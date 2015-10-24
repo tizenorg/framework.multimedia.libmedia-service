@@ -27,7 +27,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "media-svc-error.h"
+#include "media-util-err.h"
 #include "media-svc-types.h"
 #include "media-svc-debug.h"
 #include "media-svc-localize-utils.h"
@@ -14177,7 +14177,7 @@ static const UChar *__media_svc_get_bpmf(const UChar src)
 
 int _media_svc_get_bopomofo(const char *src, char **dest)
 {
-	int ret = MEDIA_INFO_ERROR_NONE;
+	int ret = MS_MEDIA_ERR_NONE;
 	UChar *tmp_result = NULL;
 	UErrorCode status = 0;
 	char *temp_dest = NULL;
@@ -14192,7 +14192,7 @@ int _media_svc_get_bopomofo(const char *src, char **dest)
 	u_strFromUTF8(NULL, 0, &size, src, strlen(src), &status);
 	if (U_FAILURE(status) && status != U_BUFFER_OVERFLOW_ERROR) {
 		media_svc_error("u_strFromUTF8 to get the dest length Failed(%s)", u_errorName(status));
-		ret = MEDIA_INFO_ERROR_INTERNAL;
+		ret = MS_MEDIA_ERR_INTERNAL;
 		goto DATA_FREE;
 	}
 
@@ -14201,7 +14201,7 @@ int _media_svc_get_bopomofo(const char *src, char **dest)
 	u_strFromUTF8(tmp_result, size + 1, NULL, src, -1, &status);
 	if (U_FAILURE(status)){
 		media_svc_error("u_strFromUTF8 Failed(%s)", u_errorName(status));
-		ret = MEDIA_INFO_ERROR_INTERNAL;
+		ret = MS_MEDIA_ERR_INTERNAL;
 		goto DATA_FREE;
 	}
 
@@ -14213,7 +14213,7 @@ int _media_svc_get_bopomofo(const char *src, char **dest)
 		UChar *bopomofo = calloc(1, sizeof(UChar)*4);
 		if (bopomofo == NULL) {
 			media_svc_error("u_strToUTF8 to allocate memory Failed");
-			ret = MEDIA_INFO_ERROR_OUT_OF_MEMORY;
+			ret = MS_MEDIA_ERR_OUT_OF_MEMORY;
 			goto DATA_FREE;
 		}
 		__media_svc_get_bopomofo(tmp_result[i], bopomofo, &len);
@@ -14221,7 +14221,7 @@ int _media_svc_get_bopomofo(const char *src, char **dest)
 		u_strToUTF8(NULL, 0, &tmp_size, bopomofo, -1, &status);
 		if (U_FAILURE(status) && status != U_BUFFER_OVERFLOW_ERROR) {
 			media_svc_error("u_strToUTF8 to get the dest length Failed(%s)", u_errorName(status));
-			ret = MEDIA_INFO_ERROR_INTERNAL;
+			ret = MS_MEDIA_ERR_INTERNAL;
 			free(bopomofo);
 			goto DATA_FREE;
 		}
@@ -14231,7 +14231,7 @@ int _media_svc_get_bopomofo(const char *src, char **dest)
 		if (tmp == NULL)
 		{
 			media_svc_error("u_strToUTF8 to allocate memory Failed");
-			ret = MEDIA_INFO_ERROR_OUT_OF_MEMORY;
+			ret = MS_MEDIA_ERR_OUT_OF_MEMORY;
 			free(bopomofo);
 			goto DATA_FREE;
 		}
@@ -14245,7 +14245,7 @@ int _media_svc_get_bopomofo(const char *src, char **dest)
 
 	*dest = temp_dest;
 	temp_dest = NULL;
-	ret = MEDIA_INFO_ERROR_NONE;
+	ret = MS_MEDIA_ERR_NONE;
 
 DATA_FREE:
 	free(tmp_result);
@@ -14278,20 +14278,20 @@ int _media_svc_convert_chinese_to_bpmf(const char *src, media_svc_bpmf_name_s **
 	u_strFromUTF8(NULL, 0, &size, src, strlen(src), &status);
 	if (U_FAILURE(status) && status != U_BUFFER_OVERFLOW_ERROR) {
 		media_svc_error("Get the length of the source string failed(%s)", u_errorName(status));
-		return MEDIA_INFO_ERROR_INTERNAL;
+		return MS_MEDIA_ERR_INTERNAL;
 	}
 
 	temp_string = calloc(1, sizeof(UChar) * (size + 1));
 	if (temp_string == NULL){
 		media_svc_error("u_strFromUTF8 Failed");
-		return MEDIA_INFO_ERROR_OUT_OF_MEMORY;
+		return MS_MEDIA_ERR_OUT_OF_MEMORY;
 	}
 	status = U_ZERO_ERROR;
 	u_strFromUTF8(temp_string, size + 1, NULL, src, -1, &status);
 	if (U_FAILURE(status)){
 		media_svc_error("u_strFromUTF8 Failed(%s)", u_errorName(status));
 		free(temp_string);
-		return MEDIA_INFO_ERROR_INTERNAL;
+		return MS_MEDIA_ERR_INTERNAL;
 	}
 
 	int i = 0;
@@ -14341,7 +14341,7 @@ int _media_svc_convert_chinese_to_bpmf(const char *src, media_svc_bpmf_name_s **
 		if (bpmf == NULL)
 		{
 			free(temp_string);
-			return MEDIA_INFO_ERROR_OUT_OF_MEMORY;
+			return MS_MEDIA_ERR_OUT_OF_MEMORY;
 		}
 		bpmf->bpmf_name = strdup(bpmf_name);
 		bpmf->bpmf_initial = strdup(bpmf_initial_name);
@@ -14351,7 +14351,7 @@ int _media_svc_convert_chinese_to_bpmf(const char *src, media_svc_bpmf_name_s **
 
 	free(temp_string);
 
-	return MEDIA_INFO_ERROR_NONE;
+	return MS_MEDIA_ERR_NONE;
 }
 
 char _media_svc_bpmf_get_fuzzy_number(const char *src)
