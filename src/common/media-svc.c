@@ -1790,7 +1790,7 @@ int media_svc_insert_storage(MediaSvcHandle *handle, const char *storage_id, con
 	media_svc_retvm_if(db_handle == NULL, MS_MEDIA_ERR_INVALID_PARAMETER, "Handle is NULL");
 	media_svc_retvm_if(storage_id == NULL, MS_MEDIA_ERR_INVALID_PARAMETER, "storage_id is NULL");
 	media_svc_retvm_if(storage_path == NULL, MS_MEDIA_ERR_INVALID_PARAMETER, "storage_path is NULL");
-	media_svc_retvm_if(__media_svc_check_storage(storage_type, TRUE) != TRUE, MS_MEDIA_ERR_INVALID_PARAMETER, "Invalid storage_type");
+	media_svc_retvm_if(__media_svc_check_storage(storage_type, FALSE) != TRUE, MS_MEDIA_ERR_INVALID_PARAMETER, "Invalid storage_type");
 
 	ret = _media_svc_append_storage(db_handle, storage_id, storage_name, storage_path, storage_account, storage_type);
 	media_svc_retvm_if(ret != MS_MEDIA_ERR_NONE, ret, "append storage failed : %d", ret);
